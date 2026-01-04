@@ -1,0 +1,65 @@
+.page-title {
+  margin-bottom: 16px;
+}
+
+.info-text {
+  color: #666;
+}
+
+.error-text {
+  color: #b00020;
+}
+
+.post-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fff;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.post-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.post-author {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.username {
+  color: #999;
+}
+
+.post-date {
+  font-size: 13px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.post-description {
+  margin-top: 12px;
+  color: #333;
+}
+
+.post-actions {
+  margin-top: 12px;
+}
+
+.post-actions a {
+  text-decoration: none;
+  color: #1976d2;
+}
+
+.post-actions a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,31 @@
+<h1 style="margin: 0 0 12px;">Home</h1>
+
+<p *ngIf="loading">Loading posts...</p>
+<p *ngIf="error" style="color:#b00020;">{{ error }}</p>
+
+<div *ngFor="let p of posts"
+     style="border:1px solid #e5e5e5; border-radius:12px; padding:14px; margin:12px 0; background:#fff;">
+
+  <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+    <div>
+      <div style="font-size:18px; font-weight:700;">{{ p.title }}</div>
+      <div style="color:#666; margin-top:4px;">
+        by <b>{{ p.author.displayName }}</b>
+        <span style="color:#999;">({{ p.author.username }})</span>
+      </div>
+    </div>
+
+    <small style="color:#777; white-space:nowrap;">
+      {{ p.createdAt | date:'medium' }}
+    </small>
+  </div>
+
+  <p *ngIf="p.description" style="margin:10px 0 0; color:#333;">
+    {{ p.description }}
+  </p>
+
+  <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+    <a [href]="p.videoUrl" target="_blank" rel="noreferrer">Open video link</a>
+    <span *ngIf="p.thumbnailUrl" style="color:#999;">(thumb: {{ p.thumbnailUrl }})</span>
+  </div>
+</div>
