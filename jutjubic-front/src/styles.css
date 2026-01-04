@@ -1,1 +1,29 @@
-/* You can add global styles to this file, and also import other style files */
+html, body {
+  font-family: Roboto;
+}
+
+:root{
+  --sidebar-collapsed: 64px;
+  --sidebar-open: 220px;
+}
+
+.app-content{
+  padding: 16px;
+  width: calc(100vw - var(--sidebar-collapsed));
+  margin-left: var(--sidebar-collapsed);
+  transition: margin-left 180ms ease, width 180ms ease;
+  box-sizing: border-box;
+}
+
+body.sidebar-open .app-content{
+  width: calc(100vw - var(--sidebar-open));
+  margin-left: var(--sidebar-open);
+}
+
+
+@media (max-width: 768px) {
+  .app-content,
+  body.sidebar-open .app-content {
+    margin-left: 0;
+  }
+}

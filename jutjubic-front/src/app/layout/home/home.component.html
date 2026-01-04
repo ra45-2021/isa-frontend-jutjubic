@@ -1,31 +1,63 @@
-<h1 style="margin: 0 0 12px;">Home</h1>
+<p *ngIf="loading" class="muted">Loading posts...</p>
+<p *ngIf="error" class="error">{{ error }}</p>
 
-<p *ngIf="loading">Loading posts...</p>
-<p *ngIf="error" style="color:#b00020;">{{ error }}</p>
+<div class="grid" *ngIf="!loading && !error">
+  <div *ngFor="let p of posts" class="post">
 
-<div *ngFor="let p of posts"
-     style="border:1px solid #e5e5e5; border-radius:12px; padding:14px; margin:12px 0; background:#fff;">
+    <div class="media">
+      <button
+        class="thumb"
+        type="button"
+        aria-label="Video placeholder"
+      >
+        <img
+          *ngIf="p.thumbnailUrl; else noThumb"
+          class="thumb-img"
+          [src]="p.thumbnailUrl!"
+          [alt]="p.title + ' thumbnail'"
+          loading="lazy"
+        />
 
-  <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-    <div>
-      <div style="font-size:18px; font-weight:700;">{{ p.title }}</div>
-      <div style="color:#666; margin-top:4px;">
-        by <b>{{ p.author.displayName }}</b>
-        <span style="color:#999;">({{ p.author.username }})</span>
-      </div>
+        <ng-template #noThumb>
+          <div class="thumb-fallback">No thumbnail</div>
+        </ng-template>
+
+        <div class="play-overlay">
+          <div class="play-btn">
+            <span class="play-triangle"></span>
+          </div>
+        </div>
+      </button>
     </div>
 
-    <small style="color:#777; white-space:nowrap;">
-      {{ p.createdAt | date:'medium' }}
-    </small>
+    <div class="meta">
+  <div class="row1">
+    <img class="avatar" src="assets/profile.png" alt="Profile" />
+    <div class="title" title="{{ p.title }}">{{ p.title }}</div>
+    <div class="time">{{ timeLabel(p.createdAt) }}</div>
   </div>
 
-  <p *ngIf="p.description" style="margin:10px 0 0; color:#333;">
-    {{ p.description }}
-  </p>
+  <div class="row2">
+    <div class="username">{{ p.author.username }}</div>
 
-  <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
-    <a [href]="p.videoUrl" target="_blank" rel="noreferrer">Open video link</a>
-    <span *ngIf="p.thumbnailUrl" style="color:#999;">(thumb: {{ p.thumbnailUrl }})</span>
+    <div *ngIf="hasTags(p)" class="tags">
+      <span *ngFor="let t of p.tags" class="tag">#{{ t }}</span>
+    </div>
+  </div>
+
+  <div class="row3">
+    <button class="action" type="button" (click)="actionGuard()">
+      <img class="action-ico" src="assets/like.png" alt="" />
+      <span>Like</span>
+    </button>
+
+    <button class="action" type="button" (click)="actionGuard()">
+      <img class="action-ico" src="assets/comment.png" alt="" />
+      <span>Comment</span>
+    </button>
+  </div>
+</div>
+
+
   </div>
 </div>

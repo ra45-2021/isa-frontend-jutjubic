@@ -1,8 +1,51 @@
-<nav style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid #ddd;">
-  <b>Jutjubić</b>
+<!-- Top bar -->
+<header class="topbar">
+  <div class="left">
+    <button class="icon-btn" type="button" (click)="toggleSidebar()" aria-label="Toggle menu">
+      <span class="hamburger">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
 
-  <div style="display:flex; gap:12px;">
-    <a routerLink="/home">Home</a>
-    <span style="color:#999;">(login later)</span>
+    <a class="brand-link" routerLink="/home" aria-label="Go to Home">
+      <div class="brand">
+        <img class="brand-logo" src="assets/logo2.png" alt="Logo" />
+        <div class="brand-title">JutJubic</div>
+      </div>
+    </a>
+
   </div>
-</nav>
+
+  <div class="right">
+    <a *ngIf="isLoggedIn; else loginBtn" class="icon-link" routerLink="/profile">
+      <img class="profile-img" src="assets/profile.png" alt="Profile" />
+    </a>
+
+    <ng-template #loginBtn>
+    <a class="login-btn" routerLink="/login">LOG IN</a>
+    </ng-template>
+  </div>
+</header>
+
+
+<!-- Layout: sidebar + page content -->
+<div class="shell">
+  <aside class="sidebar" [class.open]="sidebarOpen">
+    <a class="side-item" routerLink="/home">
+      <img class="side-icon" src="assets/icon.png" alt="" />
+      <span class="side-text">Placeholder 1</span>
+    </a>
+
+    <a class="side-item" routerLink="/home">
+      <img class="side-icon" src="assets/icon.png" alt="" />
+      <span class="side-text">Placeholder 2</span>
+    </a>
+
+    <a class="side-item" routerLink="/home">
+      <img class="side-icon" src="assets/icon.png" alt="" />
+      <span class="side-text">Placeholder 3</span>
+    </a>
+  </aside>
+
+  <div class="content-spacer"></div>
+</div>
