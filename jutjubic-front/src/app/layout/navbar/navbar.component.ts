@@ -11,7 +11,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 })
 export class NavbarComponent {
   sidebarOpen = true; 
-  isLoggedIn = false;   // TODO: replace later with real auth
+  isLoggedIn = true;   // TODO: replace later with real auth
 
   constructor(@Inject(DOCUMENT) private document: Document) {
     this.syncBodyClass();

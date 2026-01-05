@@ -1,0 +1,88 @@
+.profile-tile{
+  width: 100%;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #e6e6e6;  
+  border-radius: 0;        
+  padding: 28px 38px 34px;         
+  margin-bottom: 10px;            
+}
+
+
+.avatar{
+  width: 166px;
+  height: 166px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  object-fit: cover;
+}
+
+.header-text{
+  min-width: 0;
+}
+
+.name{
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.username{
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.bio{
+  margin-top: 10px;
+  font-size: 13px;
+  color: #788ab1;
+  line-height: 1.45;
+}
+
+.section-title{
+  font-size: 30px;
+  font-weight: 800;
+  color: #111827;
+  margin: 20px 10px 12px;
+}
+.header{
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.side-fields{
+  margin-left: 400px; 
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 320px;
+}
+
+.side-row{
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.side-block{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-label{
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a5f89;
+}
+
+.side-value{
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
