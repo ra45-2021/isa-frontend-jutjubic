@@ -1,0 +1,36 @@
+<p *ngIf="loading" class="muted">Loading profile...</p>
+<p *ngIf="error" class="error">{{ error }}</p>
+
+<div class="profile-page" *ngIf="!loading && !error && user">
+  <div class="profile-tile">
+    <div class="header">
+      <img
+        [src]="avatarSrc()"
+        (error)="imgFallback($event)"
+        alt="Profile"
+        class="avatar"
+      />
+
+      <div class="header-text">
+        <div class="name">{{ user.name }} {{ user.surname }}</div>
+        <div class="username">&#64;{{ user.username }}</div>
+        <div class="bio">{{ user.bio || '—' }}</div>
+      </div>
+
+      <div class="side-fields">
+  <div class="side-block">
+    <div class="side-label">Email</div>
+    <div class="side-value">{{ user.emailAdress }}</div>
+  </div>
+
+  <div class="side-block">
+    <div class="side-label">Address</div>
+    <div class="side-value">{{ user.adress || '—' }}</div>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+  <div class="section-title">Videos</div>
+</div>
