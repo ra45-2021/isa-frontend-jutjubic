@@ -13,17 +13,19 @@
         <div class="brand-title">JutJubic</div>
       </div>
     </a>
-
   </div>
 
   <div class="right">
-    <a *ngIf="isLoggedIn" routerLink="/profile">
+  <ng-container *ngIf="authService.isLoggedIn(); else loginBtn">
+    <a routerLink="/profile">
       <img class="profile-img" src="assets/profile.png" alt="Profile" />
     </a>
+    <button (click)="authService.logout()" class="logout-link">LOGOUT</button>
+  </ng-container>
 
-    <ng-template #loginBtn>
+  <ng-template #loginBtn>
     <a class="login-btn" routerLink="/login">LOG IN</a>
-    </ng-template>
+  </ng-template>
   </div>
 </header>
 

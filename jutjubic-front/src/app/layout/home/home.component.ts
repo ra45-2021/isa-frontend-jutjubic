@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../components/auth/auth.service';
 
 interface UserPublic {
   id: number;
@@ -48,9 +49,6 @@ export class HomeComponent implements OnInit {
   loading = true;
   error = '';
 
-  // TODO: replace later with real auth
-  isLoggedIn = false;
-
   openCommentsPostId: number | null = null;
 
   commentDraft: Record<number, string> = {};
@@ -67,7 +65,8 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -88,12 +87,13 @@ export class HomeComponent implements OnInit {
   }
 
   actionGuard(): void {
-    if (!this.isLoggedIn) {
-      this.router.navigateByUrl('/login');
-      return;
-    }
-    console.log('Action allowed');
+  if (!this.authService.isLoggedIn()) {
+    this.router.navigateByUrl('/login');
+    return;
   }
+  
+  console.log('User logged in and action permited but not implemented yet');
+}
 
   timeLabel(iso: string): string {
     const d = new Date(iso);
@@ -149,9 +149,10 @@ export class HomeComponent implements OnInit {
   }
 
   onCommentInputClick(): void {
-    if (!this.isLoggedIn) {
-      this.router.navigateByUrl('/login');
-    }
+  if (!this.authService.isLoggedIn()) {
+    this.router.navigateByUrl('/login');
+  }
+
   }
 
   private cacheKey(postId: number, page: number): string {
@@ -205,7 +206,7 @@ export class HomeComponent implements OnInit {
   }
 
   postComment(postId: number): void {
-    if (!this.isLoggedIn) {
+    if (!this.authService.isLoggedIn()) {
       this.router.navigateByUrl('/login');
       return;
     }

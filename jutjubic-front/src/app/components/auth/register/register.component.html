@@ -1,0 +1,44 @@
+<div class="register-page">
+  <div class="register-card">
+    <h1>Register</h1>
+    <form (ngSubmit)="onRegister()">
+      <input type="text" name="name" [(ngModel)]="regData.name" placeholder="Name" required />
+      <input type="text" name="surname" [(ngModel)]="regData.surname" placeholder="Surname" required />
+      <input type="text" name="username" [(ngModel)]="regData.username" placeholder="Username" required />
+      <input type="email" name="email" [(ngModel)]="regData.email" placeholder="Email" required />
+      <input type="text" name="adress" [(ngModel)]="regData.adress" placeholder="Address" required />
+      <input type="text" name="phoneNumber" [(ngModel)]="regData.phoneNumber" placeholder="Phone Number" required />
+
+      <div class="password-fields">
+        <input 
+          type="password" 
+          name="password" 
+          [(ngModel)]="regData.password" 
+          #pass="ngModel"
+          minlength="6"
+          placeholder="New Password" 
+          class="dark-red-text" 
+          required />
+        
+        <div *ngIf="pass.errors?.['minlength'] && pass.touched" class="error-text">
+          Lozinka mora imati bar 6 karaktera.
+        </div>
+
+        <input 
+          type="password" 
+          name="confirmPassword" 
+          [(ngModel)]="confirmPassword" 
+          placeholder="Confirm Password" 
+          class="dark-red-text" 
+          required />
+      </div>
+
+      <button type="submit" class="primary-btn">Sign Up</button>
+    </form>
+
+    <div class="divider"></div>
+        <button type="button" class="register-btn" routerLink="/login">
+            Already have an account? Log In
+        </button>
+  </div>
+</div>
