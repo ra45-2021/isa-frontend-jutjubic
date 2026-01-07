@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { AuthService } from '../../components/auth/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,9 +12,11 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 })
 export class NavbarComponent {
   sidebarOpen = true; 
-  isLoggedIn = true;   // TODO: replace later with real auth
 
-  constructor(@Inject(DOCUMENT) private document: Document) {
+  constructor(
+    @Inject(DOCUMENT) private document: Document,
+    public authService: AuthService
+  ) {
     this.syncBodyClass();
   }
 
