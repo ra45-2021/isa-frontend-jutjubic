@@ -4,7 +4,42 @@
 <div class="grid" *ngIf="!loading && !error">
   <div *ngFor="let p of posts" class="post">
 
-    <div class="media">
+    
+
+    <div class="meta">
+      <div class="row1">
+        <a
+          class="avatar-link avatar-hover"
+          [routerLink]="['/profile', p.author.username]"
+        >
+          <img
+            class="avatar"
+            [src]="avatarSrc(p.author)"
+            alt="Profile"
+            (error)="imgFallback($event)"
+            loading="lazy"
+          />
+
+          <span class="avatar-username">
+            {{ p.author.username }}
+          </span>
+        </a>
+
+
+        <div class="title" title="{{ p.title }}">{{ p.title }}</div>
+        <div class="time">{{ timeLabel(p.createdAt) }}</div>
+      </div>
+
+      <div class="row2">
+
+        <div *ngIf="hasTags(p)" class="tags">
+          <span *ngFor="let t of p.tags | slice:0:3" class="tag">
+            #{{ t }}
+          </span>
+        </div>
+      </div>
+
+      <div class="media">
       <button class="thumb" type="button" aria-label="Video placeholder">
         <img
           *ngIf="p.thumbnailUrl; else noThumb"
@@ -26,48 +61,22 @@
       </button>
     </div>
 
-    <div class="meta">
-      <div class="row1">
-        <a class="avatar-link" [routerLink]="['/profile', p.author.username]">
-          <img
-            class="avatar"
-            [src]="avatarSrc(p.author)"
-            alt="Profile"
-            (error)="imgFallback($event)"
-            loading="lazy"
-          />
-        </a>
-
-        <div class="title" title="{{ p.title }}">{{ p.title }}</div>
-        <div class="time">{{ timeLabel(p.createdAt) }}</div>
-      </div>
-
-      <div class="row2">
-        <a class="username" [routerLink]="['/profile', p.author.username]">
-          {{ p.author.username }}
-        </a>
-
-        <div *ngIf="hasTags(p)" class="tags">
-          <span *ngFor="let t of p.tags" class="tag">#{{ t }}</span>
-        </div>
-      </div>
-
       <div class="row3">
-        <!-- LIKE stays SAME -->
         <button class="action" type="button" (click)="actionGuard()">
           <img class="action-ico" src="assets/like.png" alt="" />
-          <span>Like</span>
+          <span>Likes</span>
         </button>
 
-        <!-- COMMENTS: anyone can click; toggles panel -->
-        <button class="action" type="button" (click)="toggleComments(p.id)">
+        <button class="action action-disabled" type="button">
           <img class="action-ico" src="assets/comment.png" alt="" />
-          <span>Comments</span>
+          <span class="comment-count">
+            {{ p.commentCount ?? 0 }}
+            {{ (p.commentCount ?? 0) === 1 ? 'Comment' : 'Comments' }}
+          </span>
         </button>
       </div>
 
-      <!-- Sliding popup below -->
-      <div class="comments-panel" [class.open]="openCommentsPostId === p.id">
+      <div class="comments-panel open">
         <div class="comments-inner">
 
           <div class="comment-compose">
@@ -80,9 +89,14 @@
               placeholder="Write a comment..."
             />
 
-            <button class="comment-post" type="button" (click)="postComment(p.id)">
-              Post
-            </button>
+            <button
+            class="comment-post icon-only"
+            type="button"
+            (click)="postComment(p.id)"
+            aria-label="Post comment"
+          >
+            <img src="assets/post1.png" alt="Post" />
+          </button>
           </div>
 
           <div *ngIf="commentsError[p.id]" class="comment-error">
@@ -93,45 +107,70 @@
             Loading...
           </div>
 
-          <ng-container *ngIf="openCommentsPostId === p.id">
-            <div *ngIf="getCurrentCommentsPage(p.id) as page">
-              <div *ngFor="let c of page.items" class="comment-item">
-                <div class="comment-head">
-                  <div class="comment-author">{{ c.authorUsername }}</div>
-                  <div class="comment-date">{{ commentTime(c.createdAt) }}</div>
-                </div>
+          <div *ngIf="getCurrentCommentsPage(p.id) as page">
+          <div *ngFor="let c of page.items" class="comment-item">
+            <div class="comment-head">
 
-                <div class="comment-text">{{ c.text }}</div>
-              </div>
+              <a class="comment-author-link" [routerLink]="['/profile', c.authorUsername]">
+                <img
+                  class="comment-avatar"
+                  [src]="commentAvatarSrc(c.authorProfileImageUrl)"
+                  alt="Profile"
+                  (error)="imgFallback($event)"
+                  loading="lazy"
+                />
+                <span class="comment-author">{{ c.authorUsername }}</span>
+              </a>
 
-              <div class="comment-pager" *ngIf="page.totalPages > 1">
-                <button
-                  class="pager-btn"
-                  type="button"
-                  (click)="prevComments(p.id)"
-                  [disabled]="page.page === 0"
-                >
-                  Prev
-                </button>
-
-                <div class="pager-info">{{ page.page + 1 }} / {{ page.totalPages }}</div>
-
-                <button
-                  class="pager-btn"
-                  type="button"
-                  (click)="nextComments(p.id)"
-                  [disabled]="page.page + 1 >= page.totalPages"
-                >
-                  Next
-                </button>
-              </div>
+              <div class="comment-date">{{ commentTime(c.createdAt) }}</div>
             </div>
-          </ng-container>
+
+            <div class="comment-text-wrapper">
+              <div class="comment-text clamped">
+                {{ c.text }}
+              </div>
+
+              <button
+                *ngIf="c.text.length > 120"
+                class="comment-expand"
+                type="button"
+                aria-label="Comment is truncated"
+              >
+                ...
+              </button>
+            </div>
+          </div>
+
+          <div class="comment-pager" *ngIf="page">
+            <button
+              class="pager-btn icon"
+              type="button"
+              (click)="prevComments(p.id)"
+              [disabled]="page.page === 0"
+              aria-label="Previous comments"
+            >
+              <img src="assets/post.png" alt="" class="pager-ico left" />
+            </button>
+
+            <div class="pager-info">{{ page.page + 1 }} / {{ page.totalPages }}</div>
+
+            <button
+              class="pager-btn icon"
+              type="button"
+              (click)="nextComments(p.id)"
+              [disabled]="page.page + 1 >= page.totalPages"
+              aria-label="Next comments"
+            >
+              <img src="assets/post.png" alt="" class="pager-ico right" />
+            </button>
+          </div>
+        </div>
 
         </div>
       </div>
 
     </div>
+
 
   </div>
 </div>

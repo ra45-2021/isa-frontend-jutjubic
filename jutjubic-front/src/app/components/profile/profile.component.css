@@ -1,62 +1,71 @@
 .profile-tile{
   width: 100%;
-  background: #fff;
-  border: none;
-  border-bottom: 1px solid #e6e6e6;  
-  border-radius: 0;        
-  padding: 28px 38px 34px;         
-  margin-bottom: 10px;            
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 38px 34px;
+  margin-bottom: 14px;
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
 }
 
-
+/* Avatar */
 .avatar{
   width: 166px;
   height: 166px;
   border-radius: 50%;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255,255,255,0.12);
   object-fit: cover;
+  background: #0b1020;
 }
 
-.header-text{
-  min-width: 0;
-}
-
-.name{
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.username{
-  margin-top: 4px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.bio{
-  margin-top: 10px;
-  font-size: 13px;
-  color: #788ab1;
-  line-height: 1.45;
-}
-
-.section-title{
-  font-size: 30px;
-  font-weight: 800;
-  color: #111827;
-  margin: 20px 10px 12px;
-}
+/* Header */
 .header{
   display: flex;
   align-items: center;
   gap: 22px;
 }
 
+.header-text{
+  min-width: 0;
+}
+
+/* Name & username */
+.name{
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.username{
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+/* Bio */
+.bio{
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.45;
+}
+
+/* Section title */
+.section-title{
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  margin: 22px 10px 14px;
+}
+
+/* Side info */
 .side-fields{
-  margin-left: 400px; 
+  margin-left: 400px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   max-width: 320px;
 }
 
@@ -73,16 +82,18 @@
   gap: 4px;
 }
 
+/* Labels & values */
 .side-label{
-  font-size: 12px;
-  font-weight: 700;
-  color: #4a5f89;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--accent-2);
 }
 
 .side-value{
   font-size: 13px;
-  color: #374151;
+  color: rgba(255,255,255,0.82);
   line-height: 1.35;
   word-break: break-word;
 }
-
