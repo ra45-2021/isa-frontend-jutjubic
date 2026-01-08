@@ -4,6 +4,7 @@ import { HomeComponent } from './layout/home/home.component';
 import { LoginComponent } from './components/auth/login/login.component';
 import { RegisterComponent } from './components/auth/register/register.component';
 import { ProfileComponent } from './components/profile/profile.component';
+import { UploadComponent } from './components/upload/upload.component';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
       { path: 'profile/:username', component: ProfileComponent },
+      { path: 'upload', component: UploadComponent },
       { path: '', redirectTo: 'home', pathMatch: 'full' }
 
     ]

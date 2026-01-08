@@ -17,6 +17,7 @@
 
   <div class="right">
   <ng-container *ngIf="authService.isLoggedIn(); else loginBtn">
+    <a routerLink="/upload" class="upload-btn">UPLOAD</a>
     <a routerLink="/profile">
       <img class="profile-img" src="assets/profile.png" alt="Profile" />
     </a>
