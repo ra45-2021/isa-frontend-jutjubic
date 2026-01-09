@@ -40,7 +40,8 @@ export class LoginComponent {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        this.showError('Invalid email or password.');
+        const message = err.error || 'Invalid email or password.';
+        this.showError(message);
       }
     });
   }
