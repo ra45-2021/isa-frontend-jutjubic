@@ -2,13 +2,14 @@
 <p *ngIf="error" class="error">{{ error }}</p>
 
 <div class="profile-page" *ngIf="!loading && !error && user">
+
   <div class="profile-tile">
     <div class="header">
       <img
+        class="avatar"
         [src]="avatarSrc()"
         (error)="imgFallback($event)"
         alt="Profile"
-        class="avatar"
       />
 
       <div class="header-text">
@@ -18,19 +19,66 @@
       </div>
 
       <div class="side-fields">
-  <div class="side-block">
-    <div class="side-label">Email</div>
-    <div class="side-value">{{ user.emailAdress }}</div>
-  </div>
+        <div class="side-block">
+          <div class="side-label">Email</div>
+          <div class="side-value">{{ user.emailAdress }}</div>
+        </div>
 
-  <div class="side-block">
-    <div class="side-label">Address</div>
-    <div class="side-value">{{ user.adress || '—' }}</div>
-  </div>
-</div>
-
+        <div class="side-block">
+          <div class="side-label">Address</div>
+          <div class="side-value">{{ user.adress || '—' }}</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="section-title">Videos</div>
+
+  <p *ngIf="postsLoading" class="muted">Loading videos...</p>
+  <p *ngIf="postsError" class="error">{{ postsError }}</p>
+
+  <p *ngIf="!postsLoading && !postsError && posts.length === 0" class="muted">
+    No videos yet.
+  </p>
+
+  <div class="videos-grid" *ngIf="!postsLoading && !postsError && posts.length">
+    <div class="video-card" *ngFor="let p of posts">
+
+      <div class="media">
+        <button class="thumb" type="button" aria-label="Video placeholder">
+
+          <img
+            *ngIf="p.thumbnailUrl; else noThumb"
+            class="thumb-img"
+            [src]="p.thumbnailUrl"
+            [alt]="p.title"
+            loading="lazy"
+          />
+
+          <ng-template #noThumb>
+            <div class="thumb-fallback">No thumbnail</div>
+          </ng-template>
+
+          <div class="play-overlay">
+            <div class="play-btn">
+              <span class="play-triangle"></span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <div class="video-body">
+        <div class="video-title">{{ p.title }}</div>
+
+        <div class="video-meta">
+          {{ p.createdAt | date:'medium' }} · {{ p.commentCount || 0 }} comments
+        </div>
+
+        <div class="tags" *ngIf="p.tags?.length">
+          <span class="tag" *ngFor="let t of p.tags">#{{ t }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>

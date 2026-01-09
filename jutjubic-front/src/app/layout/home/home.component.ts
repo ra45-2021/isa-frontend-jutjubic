@@ -20,11 +20,13 @@ interface PostFeed {
   thumbnailUrl?: string | null;
   createdAt: string;
   author: UserPublic;
+  commentCount?: number;
 }
 
 interface CommentViewDto {
   id: number;
   authorUsername: string;
+  authorProfileImageUrl?: string | null; 
   createdAt: string;
   text: string;
 }
@@ -49,10 +51,7 @@ export class HomeComponent implements OnInit {
   loading = true;
   error = '';
 
-  openCommentsPostId: number | null = null;
-
   commentDraft: Record<number, string> = {};
-
   commentPageIndex: Record<number, number> = {};
 
   private commentsCache = new Map<string, CommentPageDto>();
@@ -60,8 +59,23 @@ export class HomeComponent implements OnInit {
   commentsLoading: Record<number, boolean> = {};
   commentsError: Record<number, string> = {};
 
-  // TEMP: until real auth is implemented
-  currentUsername = 'ana.zaric';
+  private errorTimers: Record<number, any> = {};
+
+  private showCommentError(postId: number, msg: string): void {
+  this.commentsError[postId] = msg;
+
+  if (this.errorTimers[postId]) {
+    clearTimeout(this.errorTimers[postId]);
+  }
+
+  this.errorTimers[postId] = setTimeout(() => {
+    if (this.commentsError[postId] === msg) {
+      this.commentsError[postId] = '';
+    }
+    delete this.errorTimers[postId];
+  }, 3000);
+}
+
 
   constructor(
     private http: HttpClient,
@@ -74,6 +88,11 @@ export class HomeComponent implements OnInit {
       next: data => {
         this.posts = data ?? [];
         this.loading = false;
+
+        for (const p of this.posts) {
+          this.commentPageIndex[p.id] = 0;
+          this.loadComments(p.id, 0);
+        }
       },
       error: () => {
         this.error = 'Failed to load posts';
@@ -87,13 +106,12 @@ export class HomeComponent implements OnInit {
   }
 
   actionGuard(): void {
-  if (!this.authService.isLoggedIn()) {
-    this.router.navigateByUrl('/login');
-    return;
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
+    console.log('User logged in and action permitted but not implemented yet');
   }
-  
-  console.log('User logged in and action permited but not implemented yet');
-}
 
   timeLabel(iso: string): string {
     const d = new Date(iso);
@@ -118,8 +136,21 @@ export class HomeComponent implements OnInit {
   }
 
   commentTime(iso: string): string {
-    return new Date(iso).toLocaleString();
+  return this.timeLabel(iso);
   }
+
+  expandedComments: Record<number, boolean> = {};
+
+  toggleComment(commentId: number): void {
+    this.expandedComments[commentId] = !this.expandedComments[commentId];
+  }
+
+
+  commentAvatarSrc(url?: string | null): string {
+  const u = (url ?? '').trim();
+  return u ? u : 'assets/profile.png';
+}
+
 
   avatarSrc(u: UserPublic | null | undefined): string {
     const url = (u?.profileImageUrl ?? '').trim();
@@ -132,27 +163,10 @@ export class HomeComponent implements OnInit {
     img.src = 'assets/profile.png';
   }
 
-
-  toggleComments(postId: number): void {
-    if (this.openCommentsPostId === postId) {
-      this.openCommentsPostId = null;
-      return;
-    }
-
-    this.openCommentsPostId = postId;
-
-    if (this.commentPageIndex[postId] == null) {
-      this.commentPageIndex[postId] = 0;
-    }
-
-    this.loadComments(postId, this.commentPageIndex[postId]);
-  }
-
   onCommentInputClick(): void {
-  if (!this.authService.isLoggedIn()) {
-    this.router.navigateByUrl('/login');
-  }
-
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigateByUrl('/login');
+    }
   }
 
   private cacheKey(postId: number, page: number): string {
@@ -165,6 +179,7 @@ export class HomeComponent implements OnInit {
   }
 
   loadComments(postId: number, page: number): void {
+    
     const key = this.cacheKey(postId, page);
 
     if (this.commentsCache.has(key)) {
@@ -175,11 +190,12 @@ export class HomeComponent implements OnInit {
     this.commentsLoading[postId] = true;
     this.commentsError[postId] = '';
 
-    this.http.get<CommentPageDto>(`/api/posts/${postId}/comments?page=${page}&size=6`).subscribe({
+    this.http.get<CommentPageDto>(`/api/posts/${postId}/comments?page=${page}&size=2`).subscribe({
       next: res => {
-        this.commentsCache.set(key, res);
-        this.commentsLoading[postId] = false;
-      },
+      this.commentsCache.set(key, res);
+      this.commentsLoading[postId] = false;
+    },
+
       error: () => {
         this.commentsLoading[postId] = false;
         this.commentsError[postId] = 'Failed to load comments';
@@ -198,7 +214,6 @@ export class HomeComponent implements OnInit {
   nextComments(postId: number): void {
     const curr = this.commentPageIndex[postId] ?? 0;
     const currPage = this.commentsCache.get(this.cacheKey(postId, curr));
-
     if (currPage && curr + 1 >= currPage.totalPages) return;
 
     this.commentPageIndex[postId] = curr + 1;
@@ -215,27 +230,46 @@ export class HomeComponent implements OnInit {
     if (!text) return;
 
     for (const k of Array.from(this.commentsCache.keys())) {
-      if (k.startsWith(`${postId}:`)) {
-        this.commentsCache.delete(k);
-      }
+      if (k.startsWith(`${postId}:`)) this.commentsCache.delete(k);
     }
 
     this.commentsLoading[postId] = true;
     this.commentsError[postId] = '';
 
     this.http.post<CommentViewDto>(
-      `/api/posts/${postId}/comments?authorUsername=${encodeURIComponent(this.currentUsername)}`,
+      `/api/posts/${postId}/comments`,
       { text }
-    ).subscribe({
+    )
+    .subscribe({
       next: () => {
         this.commentDraft[postId] = '';
         this.commentPageIndex[postId] = 0;
         this.commentsLoading[postId] = false;
+
+        const post = this.posts.find(x => x.id === postId);
+        if (post) post.commentCount = (post.commentCount ?? 0) + 1;
+
         this.loadComments(postId, 0);
       },
-      error: () => {
+      error: (err) => {
         this.commentsLoading[postId] = false;
-        this.commentsError[postId] = 'Failed to post comment';
+
+        const backendMsg =
+          typeof err?.error === 'string' && err.error.trim()
+            ? err.error
+            : null;
+
+        let msg: string;
+
+        if (err?.status === 403) {
+          msg = backendMsg ?? 'Your account is inactive. You cannot comment.';
+        } else if (err?.status === 429) {
+          msg = backendMsg ?? 'Too many comments. Try again later.';
+        } else {
+          msg = backendMsg ?? 'Failed to post comment';
+        }
+
+        this.showCommentError(postId, msg);
       }
     });
   }

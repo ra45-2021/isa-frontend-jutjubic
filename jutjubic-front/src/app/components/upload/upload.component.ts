@@ -28,13 +28,11 @@ export class UploadComponent {
   error: string | null = null;
   success: string | null = null;
 
-  // Drag & drop states
   thumbnailDragOver = false;
   videoDragOver = false;
 
   constructor(private postService: PostService, private router: Router) {}
 
-  // ===== THUMBNAIL HANDLERS =====
   onThumbnailSelected(ev: Event) {
     const input = ev.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
@@ -72,7 +70,6 @@ export class UploadComponent {
     this.setThumbnailFile(null);
   }
 
-  // ===== VIDEO HANDLERS =====
   onVideoSelected(ev: Event) {
     const input = ev.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
@@ -107,21 +104,32 @@ export class UploadComponent {
     this.setVideoFile(null);
   }
 
-  // ===== SUBMIT =====
+  private errorTimer: any;
+
+  private setError(msg: string) {
+    this.error = msg;
+
+    clearTimeout(this.errorTimer);
+    this.errorTimer = setTimeout(() => {
+      this.error = null;
+    }, 3000);
+  }
+
+
   submit() {
     this.error = null;
     this.success = null;
 
     if (!this.title.trim()) {
-      this.error = 'Title is required.';
+      this.setError('Title is required.');
       return;
     }
     if (!this.thumbnailFile) {
-      this.error = 'Thumbnail is required.';
+      this.setError('Thumbnail is required.');
       return;
     }
     if (!this.videoFile) {
-      this.error = 'Video is required.';
+      this.setError('Video is required.');
       return;
     }
 
@@ -141,10 +149,10 @@ export class UploadComponent {
     this.postService.createPost(fd).subscribe({
       next: () => {
         this.success = 'Upload successful!';
-        setTimeout(() => this.router.navigateByUrl('/home'), 1000);
+        setTimeout(() => this.router.navigateByUrl('/home'), 3000);
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.error || 'Upload failed.';
+        this.setError(err?.error?.message || err?.error || 'Upload failed.');
         this.submitting = false;
       },
       complete: () => {

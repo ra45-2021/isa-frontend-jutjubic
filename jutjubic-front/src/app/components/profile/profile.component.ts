@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 interface ProfileUser {
@@ -15,6 +15,24 @@ interface ProfileUser {
   profileImageUrl?: string | null;
 }
 
+interface PostView {
+  id: number;
+  title: string;
+  description?: string | null;
+  tags?: string[];
+  videoUrl: string;
+  thumbnailUrl?: string | null;
+  createdAt: string;
+  author: {
+    id: number;
+    username: string;
+    name: string;
+    surname: string;
+    profileImageUrl?: string | null;
+  };
+  commentCount?: number;
+}
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -26,6 +44,10 @@ export class ProfileComponent implements OnInit {
   user?: ProfileUser;
   loading = true;
   error = '';
+
+  posts: PostView[] = [];
+  postsLoading = true;
+  postsError = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -44,10 +66,29 @@ export class ProfileComponent implements OnInit {
       next: u => {
         this.user = u;
         this.loading = false;
+
+        this.loadPosts(u.username);
       },
       error: () => {
         this.error = 'User not found';
         this.loading = false;
+        this.postsLoading = false;
+      }
+    });
+  }
+
+  private loadPosts(username: string) {
+    this.postsLoading = true;
+    this.postsError = '';
+
+    this.http.get<PostView[]>(`/api/posts/by-user/${encodeURIComponent(username)}`).subscribe({
+      next: ps => {
+        this.posts = ps ?? [];
+        this.postsLoading = false;
+      },
+      error: () => {
+        this.postsError = 'Could not load videos.';
+        this.postsLoading = false;
       }
     });
   }
@@ -59,5 +100,10 @@ export class ProfileComponent implements OnInit {
   imgFallback(e: Event) {
     const img = e.target as HTMLImageElement;
     img.src = 'assets/profile.png';
+  }
+
+  thumbFallback(e: Event) {
+    const img = e.target as HTMLImageElement;
+    img.src = 'assets/progile.png';
   }
 }

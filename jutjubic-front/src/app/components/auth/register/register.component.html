@@ -1,40 +1,91 @@
 <div class="register-page">
   <div class="register-card">
-    <h1>Register</h1>
+    <h1 class = "title">Register</h1>
+    <p class="subtitle">Become a JutJubic Member</p>
     <form (ngSubmit)="onRegister()">
-      <input type="text" name="name" [(ngModel)]="regData.name" placeholder="Name" required />
-      <input type="text" name="surname" [(ngModel)]="regData.surname" placeholder="Surname" required />
-      <input type="text" name="username" [(ngModel)]="regData.username" placeholder="Username" required />
-      <input type="email" name="email" [(ngModel)]="regData.email" placeholder="Email" required />
-      <input type="text" name="adress" [(ngModel)]="regData.adress" placeholder="Address" required />
-      <input type="text" name="phoneNumber" [(ngModel)]="regData.phoneNumber" placeholder="Phone Number" required />
 
-      <div class="password-fields">
-        <input 
-          type="password" 
-          name="password" 
-          [(ngModel)]="regData.password" 
-          #pass="ngModel"
-          minlength="6"
-          placeholder="New Password" 
-          class="dark-red-text" 
-          required />
-        
-        <div *ngIf="pass.errors?.['minlength'] && pass.touched" class="error-text">
-          Lozinka mora imati bar 6 karaktera.
-        </div>
+  <div class="row-2">
+    <label>
+      <span>Name</span>
+      <input type="text" name="name" [(ngModel)]="regData.name" placeholder="Enter name" required />
+    </label>
 
-        <input 
-          type="password" 
-          name="confirmPassword" 
-          [(ngModel)]="confirmPassword" 
-          placeholder="Confirm Password" 
-          class="dark-red-text" 
-          required />
-      </div>
+    <label>
+      <span>Surname</span>
+      <input type="text" name="surname" [(ngModel)]="regData.surname" placeholder="Enter surname" required />
+    </label>
+  </div>
 
-      <button type="submit" class="primary-btn">Sign Up</button>
-    </form>
+  <div class="row-2">
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" [(ngModel)]="regData.username" placeholder="Choose username" required />
+    </label>
+
+    <label>
+      <span>Email Address</span>
+      <input type="email" name="email" [(ngModel)]="regData.email" placeholder="Enter email" required />
+    </label>
+  </div>
+
+  <div class="row-2">
+    <label>
+      <span>Address</span>
+      <input type="text" name="adress" [(ngModel)]="regData.adress" placeholder="Enter address" required />
+    </label>
+
+    <label>
+      <span>Phone Number</span>
+      <input type="text" name="phoneNumber" [(ngModel)]="regData.phoneNumber" placeholder="Enter phone number" required />
+    </label>
+  </div>
+
+  <div class="row-2">
+    <label>
+      <span>Password</span>
+      <input
+  type="password"
+  name="password"
+  [(ngModel)]="regData.password"
+  #pass="ngModel"
+minlength="6"
+placeholder="Create password"
+(blur)="pass.errors?.['minlength'] 
+  ? popToast('Password must be at least 6 characters long.', 'error') 
+  : null"
+required
+/>
+
+    </label>
+
+    <label>
+      <span>Confirm Password</span>
+      <input
+        type="password"
+        name="confirmPassword"
+        [(ngModel)]="confirmPassword"
+        placeholder="Repeat password"
+        required
+      />
+    </label>
+  </div>
+  <div class="error-slot">
+    <div
+      class="toast"
+      [class.toast-error]="toastType === 'error'"
+      [class.toast-success]="toastType === 'success'"
+      *ngIf="showToast"
+      aria-live="polite"
+    >
+      {{ toastMsg }}
+    </div>
+  </div>
+
+
+  <button type="submit" class="primary-btn">Sign Up</button>
+</form>
+
+
 
     <div class="divider"></div>
         <button type="button" class="register-btn" routerLink="/login">

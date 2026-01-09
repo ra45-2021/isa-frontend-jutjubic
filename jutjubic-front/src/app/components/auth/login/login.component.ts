@@ -18,7 +18,19 @@ export class LoginComponent {
     password: ''
   };
 
+  errorMsg: string | null = null;
+  private errorTimer: any;
+
   constructor(private authService: AuthService, private router: Router) {}
+
+  private showError(msg: string) {
+    this.errorMsg = msg;
+
+    clearTimeout(this.errorTimer);
+    this.errorTimer = setTimeout(() => {
+      this.errorMsg = null;
+    }, 3000);
+  }
 
   onLogin() {
     this.authService.login(this.loginData).subscribe({
@@ -28,7 +40,8 @@ export class LoginComponent {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        alert(err.error);
+        const message = err.error || 'Invalid email or password.';
+        this.showError(message);
       }
     });
   }
