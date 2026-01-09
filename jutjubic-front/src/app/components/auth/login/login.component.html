@@ -3,21 +3,39 @@
     <h1 class="title">Log in</h1>
     <p class="subtitle">Welcome to JutJubic</p>
 
-  <form (ngSubmit)="onLogin()">
-  <label>
-    <span>Email Adress</span>
-    <input type="text" name="email" [(ngModel)]="loginData.emailAdress" placeholder="Enter email" required />
-  </label>
+    <form (ngSubmit)="onLogin()">
+      <label>
+        <span>Email Address</span>
+        <input
+          type="text"
+          name="email"
+          [(ngModel)]="loginData.emailAdress"
+          placeholder="Enter email"
+          required
+        />
+      </label>
 
-  <label>
-    <span>Password</span>
-    <input type="password" name="password" [(ngModel)]="loginData.password" placeholder="Enter password" required />
-  </label>
+      <label>
+        <span>Password</span>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="loginData.password"
+          placeholder="Enter password"
+          required
+        />
+      </label>
 
-  <button type="submit" class="primary-btn">
-    Log In
-  </button>
-  </form>
+      <div class="error-slot">
+        <div *ngIf="errorMsg" class="login-error" aria-live="polite">
+          {{ errorMsg }}
+        </div>
+      </div>
+
+      <button type="submit" class="primary-btn">
+        Log In
+      </button>
+    </form>
 
     <div class="divider"></div>
 

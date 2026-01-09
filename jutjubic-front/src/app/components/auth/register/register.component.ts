@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
+
 export class RegisterComponent {
   regData = {
     email: '',
@@ -23,30 +24,62 @@ export class RegisterComponent {
     phoneNumber: ''
   };
 
+  toastMsg = '';
+  toastType: 'error' | 'success' = 'error';
+  showToast = false;
+  private toastTimer: any;
+
   confirmPassword = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  onRegister() {
-  if (this.regData.password !== this.confirmPassword) {
-    alert('Lozinke se ne podudaraju!');
-    return;
+  public popToast(msg: string, type: 'error' | 'success' = 'error') {
+    this.toastMsg = msg;
+    this.toastType = type;
+    this.showToast = true;
+
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
   }
 
-  this.authService.register(this.regData).subscribe({
-    next: (res) => {
-      alert('Registracija uspešna! Poslali smo vam mejl sa aktivacionim kodom. Proverite sanduče pre prijave.');
-      this.router.navigate(['/login']);
-    },
-    error: (err) => {
-      if (err.status === 400 && err.error) {
-        alert(err.error);
-      } else if (err.status === 403) {
-        alert("Pristup odbijen. Proverite da li su svi podaci ispravni.");
-      } else {
-        alert('Došlo je do greške pri registraciji. Pokušajte ponovo.');
-      }
+  onRegister() {
+    if (this.regData.password !== this.confirmPassword) {
+      this.popToast("Passwords do not match.", 'error');
+      return;
     }
-  });
-}
+
+    this.authService.register(this.regData).subscribe({
+      next: () => {
+        this.popToast(
+          "Registration successful! Please check your email for the activation code.",
+          'success'
+        );
+
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 3000);
+      },
+      error: (err) => {
+        if (err.status === 400) {
+          const msg =
+            typeof err.error === 'string' && err.error.trim()
+              ? err.error
+              : "Invalid input. Please check your data and try again.";
+          this.popToast(msg, 'error');
+        } else if (err.status === 403) {
+          this.popToast(
+            "Access denied. Please verify that all fields are correct.",
+            'error'
+          );
+        } else {
+          this.popToast(
+            "Registration failed. Please try again.",
+            'error'
+          );
+        }
+      }
+    });
+  }
 }

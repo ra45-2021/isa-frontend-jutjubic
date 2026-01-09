@@ -2,80 +2,172 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 28px 16px;
+  padding: 20px 0;
 }
 
-/* CARD */
-.card{
-  width: min(860px, 100%);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--panel);
-  padding: 20px 22px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+.page{
+  width: min(980px, 100%);
 }
 
-/* HEAD */
-.h{
-  margin: 0;
-  font-size: 22px;
-  font-weight: 900;
+.head{
+  margin-bottom: 10px;
+}
+
+.title{
+  margin: 0 5px;
+  font-size: 32px;
+  font-weight: 1000;
+  letter-spacing: -0.4px;
   color: var(--text);
 }
 
-.sub{
-  margin: 6px 0 16px;
+.subtitle{
+  margin: 8px 5px 0;
   color: var(--muted-2);
-  font-size: 13px;
+  font-size: 14px;
 }
 
-/* FEEDBACK */
-.error{
-  color: #ff6b6b;
-  font-size: 13px;
-  margin: 8px 0 10px;
+.toast-slot{
+  margin-top: 10px;
+  min-height: 10px;
+  position: relative;
 }
 
-.success{
-  color: #22c55e;
+.toast{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+
+  padding: 8px 7px;
+  border-radius: 12px;
+
   font-size: 13px;
-  margin: 8px 0 10px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+
+  animation: toastIn 140ms ease-out;
 }
 
-/* GRID */
+.toast-error{
+  color: var(--error-color);
+  background-color: transparent;
+}
+
+.toast-success{
+  color: var(--success-color);
+}
+
+@keyframes toastIn{
+  from { transform: translateY(-4px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.tabs{
+  margin-top: 14px;
+}
+
+.tabs > input[type="radio"]{
+  display: none;
+}
+
+.tab-bar{
+  position: relative;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  padding: 10px 2px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.tab{
+  position: relative;
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.78);
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px;
+}
+
+#tab-text:checked ~ .tab-bar label[for="tab-text"],
+#tab-loc:checked  ~ .tab-bar label[for="tab-loc"],
+#tab-media:checked~ .tab-bar label[for="tab-media"]{
+  color: #ffffff;
+}
+
+.tab-underline{
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 6px;
+  width: 58px;
+  border-radius: 999px;
+  background: rgba(96,165,250,0.85);
+  transition: transform 180ms ease, width 180ms ease;
+}
+
+#tab-text:checked ~ .tab-bar .tab-underline{
+  transform: translateX(8px);
+  width: 58px;
+}
+
+#tab-loc:checked ~ .tab-bar .tab-underline{
+  transform: translateX(140px);
+  width: 92px;
+}
+
+#tab-media:checked ~ .tab-bar .tab-underline{
+  transform: translateX(280px);
+  width: 178px;
+}
+
+.tab-panels{
+  padding-top: 18px;
+}
+
+.panel{
+  display: none;
+}
+
+.tabs:has(#tab-text:checked) .panel-text { display: block; }
+.tabs:has(#tab-loc:checked)  .panel-loc  { display: block; }
+.tabs:has(#tab-media:checked) .panel-media { display: block; }
+
+
 .grid{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .col2{ grid-column: 1 / -1; }
 
-/* FIELD */
 .field{
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .lbl{
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .4px;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
   color: var(--accent-2);
+  text-transform: uppercase;
 }
 
-/* INPUTS */
 .inp, .ta{
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 13px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
   outline: none;
   background: rgba(255,255,255,0.04);
   color: var(--text);
 }
+
+.ta{ resize: vertical; }
 
 .inp::placeholder,
 .ta::placeholder{
@@ -87,10 +179,15 @@
   box-shadow: 0 0 0 3px rgba(96,165,250,0.18);
 }
 
-/* ===== DROP ZONE ===== */
+.hint{
+  color: var(--muted-2);
+  font-size: 13px;
+  padding-top: 4px;
+}
+
 .drop-zone{
   border: 2px dashed rgba(255,255,255,0.18);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 34px 18px;
   text-align: center;
   cursor: pointer;
@@ -119,7 +216,7 @@
 .drop-text{
   margin: 0 0 4px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text);
 }
 
@@ -129,31 +226,39 @@
   color: var(--muted);
 }
 
-/* ===== THUMB PREVIEW ===== */
 .file-preview{
   position: relative;
   width: 100%;
-  border-radius: 14px;
+  height: 240px;              
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
 .thumb{
-  width: 100%;
-  max-height: 220px;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+
+  object-fit: contain;     
   display: block;
-  border-radius: 14px;
-  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
-/* ===== FILE INFO ===== */
+
 .file-info{
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255,255,255,0.04);
 }
 
@@ -171,8 +276,8 @@
 
 .file-name{
   margin: 0 0 2px;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 900;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -181,30 +286,29 @@
 
 .file-size{
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 
-/* REMOVE */
 .remove-btn{
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.65);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
   cursor: pointer;
   display: grid;
   place-items: center;
   transition: all 0.15s;
 }
 
-.file-info .remove-btn{
-  position: static;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
+.file-preview .remove-btn{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.65);
+  border: none;
 }
 
 .remove-btn svg{
@@ -213,36 +317,34 @@
   color: #fff;
 }
 
-.file-info .remove-btn svg{
-  color: var(--muted);
-}
-
 .remove-btn:hover{
-  background: rgba(255,0,0,0.25);
-  transform: scale(1.1);
-}
-
-.file-info .remove-btn:hover{
   background: rgba(255,0,0,0.18);
+  transform: scale(1.06);
 }
 
-.file-info .remove-btn:hover svg{
-  color: #ff6b6b;
-}
-
-/* ACTIONS */
 .actions{
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
   display: flex;
   justify-content: flex-end;
+  padding: 14px 0 0;
   margin-top: 18px;
+
+  background: linear-gradient(
+    to top,
+    rgba(11, 15, 25, 0.92) 0%,
+    rgba(11, 15, 25, 0.0) 100%
+  );
 }
+
 
 .btn{
   border: 1px solid rgba(96,165,250,0.35);
-  border-radius: 12px;
-  padding: 10px 22px;
-  font-weight: 900;
-  font-size: 13px;
+  border-radius: 14px;
+  padding: 12px 22px;
+  font-weight: 1000;
+  font-size: 14px;
   cursor: pointer;
   background: rgba(96,165,250,0.18);
   color: var(--text);
@@ -259,8 +361,46 @@
   cursor: not-allowed;
 }
 
-/* MOBILE */
 @media (max-width: 900px){
   .grid{ grid-template-columns: 1fr; }
   .col2{ grid-column: auto; }
+  .tab{ font-size: 18px; }
 }
+
+.tab-bar{
+  position: relative;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  padding: 10px 2px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.tab{
+  position: relative;
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.78);
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px 18px;
+}
+
+.tab::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  height: 6px;
+  width: 70%;
+  max-width: 140px;
+  border-radius: 999px;
+  background: rgba(96,165,250,0.85);
+  transition: transform 180ms ease;
+}
+
+.tabs:has(#tab-text:checked)  label[for="tab-text"]::after{ transform: translateX(-50%) scaleX(1); }
+.tabs:has(#tab-loc:checked)   label[for="tab-loc"]::after{ transform: translateX(-50%) scaleX(1); }
+.tabs:has(#tab-media:checked) label[for="tab-media"]::after{ transform: translateX(-50%) scaleX(1); }

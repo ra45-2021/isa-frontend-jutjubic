@@ -82,9 +82,17 @@ export class NavbarComponent {
   }
 
   goMyProfile(): void {
-    this.profileMenuOpen = false;
-    this.router.navigateByUrl('/profile');
+  this.profileMenuOpen = false;
+
+  const username = this.me?.username?.trim();
+  if (!username) {
+    this.loadMeIfLoggedIn();
+    return;
   }
+
+  this.router.navigateByUrl(`/profile/${this.me?.username}`);
+}
+
 
   logout(): void {
     this.profileMenuOpen = false;

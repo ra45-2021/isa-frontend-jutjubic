@@ -1,5 +1,5 @@
 .muted { color: var(--muted); }
-.error { color: #ff6b6b; }
+.error { color: var(--error-color) }
 
 .grid {
   display: grid;

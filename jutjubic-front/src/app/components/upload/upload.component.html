@@ -1,192 +1,190 @@
 <div class="wrap">
-  <div class="card">
-    <h2 class="h">Upload video</h2>
-    <p class="sub">Enter the details and select a thumbnail and video file.</p>
+  <div class="page">
 
-    <div *ngIf="error" class="error">{{ error }}</div>
-    <div *ngIf="success" class="success">{{ success }}</div>
+    <div class="head">
+      <h1 class="title">Create post</h1>
+      <p class="subtitle">Add your details, location, thumbnail and video.</p>
 
-    <div class="grid">
-      <label class="field">
-        <span class="lbl">Title *</span>
-        <input
-          class="inp"
-          [(ngModel)]="title"
-          type="text"
-          placeholder="Video title"
-        />
-      </label>
-
-      <label class="field">
-        <span class="lbl">Tags</span>
-        <input
-          class="inp"
-          [(ngModel)]="tags"
-          type="text"
-          placeholder="tag1, tag2, tag3"
-        />
-      </label>
-
-      <label class="field col2">
-        <span class="lbl">Description</span>
-        <textarea
-          class="ta"
-          [(ngModel)]="description"
-          rows="4"
-          placeholder="Describe the video..."
-        ></textarea>
-      </label>
-
-      <label class="field">
-        <span class="lbl">Location Latitude</span>
-        <input
-          class="inp"
-          [(ngModel)]="locationLat"
-          type="text"
-          placeholder="e.g. 45.2671"
-        />
-      </label>
-
-      <label class="field">
-        <span class="lbl">Location Longitude</span>
-        <input
-          class="inp"
-          [(ngModel)]="locationLon"
-          type="text"
-          placeholder="e.g. 19.8335"
-        />
-      </label>
-
-      <!-- THUMBNAIL UPLOAD -->
-      <div class="field">
-        <span class="lbl">Thumbnail *</span>
-
-        <div
-          *ngIf="!thumbnailFile"
-          class="drop-zone"
-          [class.drag-over]="thumbnailDragOver"
-          (drop)="onThumbnailDrop($event)"
-          (dragover)="onThumbnailDragOver($event)"
-          (dragleave)="onThumbnailDragLeave($event)"
-          (click)="thumbnailInput.click()"
-        >
-          <svg
-            class="upload-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <p class="drop-text">Drop thumbnail here or click to browse</p>
-          <p class="drop-hint">PNG or JPG (max 10MB)</p>
+      <div class="toast-slot">
+        <div *ngIf="error" class="toast toast-error" aria-live="polite">
+          {{ error }}
         </div>
-
-        <div *ngIf="thumbnailFile" class="file-preview">
-          <img class="thumb" [src]="thumbnailPreviewUrl" alt="Thumbnail" />
-          <button type="button" class="remove-btn" (click)="removeThumbnail()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                d="M18 6L6 18M6 6l12 12"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
+        <div *ngIf="success" class="toast toast-success" aria-live="polite">
+          {{ success }}
         </div>
+      </div>
+    </div>
 
-        <input
-          #thumbnailInput
-          type="file"
-          accept="image/*"
-          hidden
-          (change)="onThumbnailSelected($event)"
-        />
+    <div class="tabs">
+      <input id="tab-text" type="radio" name="uploadTabs" checked="checked" />
+      <input id="tab-loc" type="radio" name="uploadTabs" />
+      <input id="tab-media" type="radio" name="uploadTabs" />
+
+      <div class="tab-bar" role="tablist" aria-label="Create Post Tabs">
+        <label class="tab" for="tab-text" role="tab">Text</label>
+        <label class="tab" for="tab-loc" role="tab">Location</label>
+        <label class="tab" for="tab-media" role="tab">Thumbnail &amp; Video</label>
       </div>
 
-      <!-- VIDEO UPLOAD -->
-      <div class="field">
-        <span class="lbl">Video *</span>
+      <div class="tab-panels">
 
-        <div
-          *ngIf="!videoFile"
-          class="drop-zone"
-          [class.drag-over]="videoDragOver"
-          (drop)="onVideoDrop($event)"
-          (dragover)="onVideoDragOver($event)"
-          (dragleave)="onVideoDragLeave($event)"
-          (click)="videoInput.click()"
-        >
-          <svg
-            class="upload-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-              stroke-width="2"
-            />
-            <path d="M14 2v6h6" stroke-width="2" />
-          </svg>
-          <p class="drop-text">Drop video here or click to browse</p>
-          <p class="drop-hint">MP4 (max 200MB)</p>
-        </div>
-
-        <div *ngIf="videoFile" class="file-info">
-          <svg
-            class="file-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-              stroke-width="2"
-            />
-            <path d="M14 2v6h6" stroke-width="2" />
-          </svg>
-          <div class="file-details">
-            <p class="file-name">{{ videoPreviewName }}</p>
-            <p class="file-size">
-              {{ (videoFile.size / 1024 / 1024).toFixed(2) }} MB
-            </p>
-          </div>
-          <button type="button" class="remove-btn" (click)="removeVideo()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                d="M18 6L6 18M6 6l12 12"
-                stroke-width="2"
-                stroke-linecap="round"
+        <section class="panel panel-text" role="tabpanel">
+          <div class="grid">
+            <label class="field">
+              <span class="lbl">Title *</span>
+              <input
+                class="inp"
+                [(ngModel)]="title"
+                type="text"
+                placeholder="Video title"
               />
-            </svg>
-          </button>
-        </div>
+            </label>
 
-        <input
-          #videoInput
-          type="file"
-          accept="video/*"
-          hidden
-          (change)="onVideoSelected($event)"
-        />
+            <label class="field">
+              <span class="lbl">Tags</span>
+              <input
+                class="inp"
+                [(ngModel)]="tags"
+                type="text"
+                placeholder="tag1, tag2, tag3"
+              />
+            </label>
+
+            <label class="field col2">
+              <span class="lbl">Description</span>
+              <textarea
+                class="ta"
+                [(ngModel)]="description"
+                rows="5"
+                placeholder="Describe the video..."
+              ></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel panel-loc" role="tabpanel">
+          <div class="grid">
+            <label class="field">
+              <span class="lbl">Latitude</span>
+              <input
+                class="inp"
+                [(ngModel)]="locationLat"
+                type="text"
+                placeholder="e.g. 45.2671"
+              />
+            </label>
+
+            <label class="field">
+              <span class="lbl">Longitude</span>
+              <input
+                class="inp"
+                [(ngModel)]="locationLon"
+                type="text"
+                placeholder="e.g. 19.8335"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel panel-media" role="tabpanel">
+          <div class="grid">
+            <div class="field">
+              <span class="lbl">Thumbnail *</span>
+
+              <div
+                *ngIf="!thumbnailFile"
+                class="drop-zone"
+                [class.drag-over]="thumbnailDragOver"
+                (drop)="onThumbnailDrop($event)"
+                (dragover)="onThumbnailDragOver($event)"
+                (dragleave)="onThumbnailDragLeave($event)"
+                (click)="thumbnailInput.click()"
+              >
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <p class="drop-text">Drop thumbnail here or click to browse</p>
+                <p class="drop-hint">PNG or JPG (max 10MB)</p>
+              </div>
+
+              <div *ngIf="thumbnailFile" class="file-preview">
+                <img class="thumb" [src]="thumbnailPreviewUrl" alt="Thumbnail" />
+                <button type="button" class="remove-btn" (click)="removeThumbnail()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <input
+                #thumbnailInput
+                type="file"
+                accept="image/*"
+                hidden
+                (change)="onThumbnailSelected($event)"
+              />
+            </div>
+
+            <div class="field">
+              <span class="lbl">Video *</span>
+
+              <div
+                *ngIf="!videoFile"
+                class="drop-zone"
+                [class.drag-over]="videoDragOver"
+                (drop)="onVideoDrop($event)"
+                (dragover)="onVideoDragOver($event)"
+                (dragleave)="onVideoDragLeave($event)"
+                (click)="videoInput.click()"
+              >
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-width="2"/>
+                  <path d="M14 2v6h6" stroke-width="2" />
+                </svg>
+                <p class="drop-text">Drop video here or click to browse</p>
+                <p class="drop-hint">MP4 (max 200MB)</p>
+              </div>
+
+              <div *ngIf="videoFile" class="file-info">
+                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-width="2"/>
+                  <path d="M14 2v6h6" stroke-width="2" />
+                </svg>
+                <div class="file-details">
+                  <p class="file-name">{{ videoPreviewName }}</p>
+                  <p class="file-size">{{ (videoFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+                </div>
+                <button type="button" class="remove-btn" (click)="removeVideo()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <input
+                #videoInput
+                type="file"
+                accept="video/*"
+                hidden
+                (change)="onVideoSelected($event)"
+              />
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
 
     <div class="actions">
-      <button
-        class="btn"
-        type="button"
-        (click)="submit()"
-        [disabled]="submitting"
-      >
-        {{ submitting ? 'Uploading...' : 'Upload' }}
+      <button class="btn" type="button" (click)="submit()" [disabled]="submitting">
+        {{ submitting ? 'Posting...' : 'Post' }}
       </button>
     </div>
+
   </div>
 </div>

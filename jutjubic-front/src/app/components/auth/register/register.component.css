@@ -18,14 +18,18 @@
 }
 
 .title{ margin: 8px 0 0; font-size: 22px; font-weight: 900; text-align:center; color:#fff; }
-.subtitle{ margin: 10px 0 18px; text-align:center; font-size:13px; color: rgba(255,255,255,0.62); }
+.subtitle{ margin: 10px 0 30px; text-align:center; font-size:13px; color: rgba(255,255,255,0.62); }
 
 form{ display:flex; flex-direction:column; gap:14px; }
 label{ display:flex; flex-direction:column; gap:8px; }
 label span{ font-size:12px; font-weight:800; color: rgba(255,255,255,0.75); }
 
+.register-card{
+  margin-top: -114px; 
+}
+
 input{
-  height: 42px;
+  height: 35px;             
   padding: 0 12px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.10);
@@ -33,7 +37,9 @@ input{
   background: rgba(255,255,255,0.06);
   color: #ffffff;
   outline: none;
+  margin-bottom: 0;       
 }
+
 input::placeholder{ color: rgba(255,255,255,0.35); }
 input:focus{
   border-color: rgba(96,165,250,0.65);
@@ -55,7 +61,7 @@ input:focus{
 .primary-btn:hover{ filter: brightness(1.08); transform: translateY(-1px); }
 .primary-btn:disabled{ opacity:0.6; cursor:not-allowed; transform:none; }
 
-.divider{ height:1px; margin:10px 0; background: rgba(255,255,255,0.10); }
+.divider{ height:1px; margin:15px 0 15px; background: rgba(255,255,255,0.10); }
 
 .register-btn{
   height: 40px;
@@ -68,3 +74,52 @@ input:focus{
   color: rgba(147,197,253,0.95);
 }
 .register-btn:hover{ text-decoration: none; }
+.row-2{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.row-2 label{
+  width: 100%;
+}
+
+@media (max-width: 520px){
+  .row-2{
+    grid-template-columns: 1fr;
+  }
+}
+.error-slot{
+  min-height: 10px;
+  position: relative;
+}
+
+.toast{
+  position: absolute;
+  inset: 0;
+
+  padding: 1px 5px;
+  border-radius: 12px;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+
+  animation: toastIn 140ms ease-out;
+}
+
+.toast-error{
+  color: var(--error-color);
+}
+
+.toast-success{
+  color: var(--success-color);
+}
+
+@keyframes toastIn{
+  from { transform: translateY(-4px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
