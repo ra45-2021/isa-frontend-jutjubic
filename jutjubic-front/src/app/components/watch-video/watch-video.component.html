@@ -1,0 +1,93 @@
+<div class="watch-container" *ngIf="!loading && post">
+  <div class="video-section">
+    <div class="video-wrap">
+      <video class="video" controls autoplay>
+        <source [src]="getVideoUrl()" type="video/mp4">
+        Vaš browser ne podržava video plejer.
+      </video>
+    </div>
+
+    <div class="meta">
+      <div class="row1">
+        <a class="avatar-link avatar-hover" [routerLink]="['/profile', post.author.username]">
+          <img class="avatar" [src]="avatarSrc(post.author)" alt="Profile" (error)="imgFallback($event)" />
+          <span class="avatar-username">{{ post.author.username }}</span>
+        </a>
+        <div class="title" title="{{ post.title }}">{{ post.title }}</div>
+        <div class="time">{{ timeLabel(post.createdAt) }}</div>
+      </div>
+
+      <div class="row2">
+        <div *ngIf="hasTags(post)" class="tags">
+          <span *ngFor="let t of post.tags" class="tag">#{{ t }}</span>
+        </div>
+      </div>
+
+      <div class="row3">
+        <button 
+            class="action" 
+            type="button" 
+            (click)="toggleLike()"
+            [class.active-like]="post.likedByMe"
+        >
+            <img 
+                class="action-ico" 
+                src="assets/like.png" 
+                [class.liked-active]="post.likedByMe"
+                alt="Like" 
+            />
+            <span [style.color]="post.likedByMe ? '#3b82f6' : 'inherit'">
+                {{ post.likeCount ?? 0 }} 
+                {{ (post.likeCount ?? 0) === 1 ? 'Like' : 'Likes' }}
+            </span>
+        </button>
+        <button class="action" type="button">
+          <img class="action-ico" src="assets/comment.png" alt="" />
+          <span class="comment-count">
+            {{ post.commentCount ?? 0 }} {{ (post.commentCount ?? 0) === 1 ? 'Comment' : 'Comments' }}
+          </span>
+        </button>
+      </div>
+
+      <div class="comments-panel open">
+        <div class="comments-inner">
+          <div class="comment-compose">
+            <input class="comment-input" type="text" [(ngModel)]="commentDraft" (click)="onCommentInputClick()" placeholder="Write a comment..." />
+            <button class="comment-post icon-only" type="button" (click)="postComment()">
+              <img src="assets/post1.png" alt="Post" />
+            </button>
+          </div>
+
+          <div *ngIf="commentsError" class="comment-error">{{ commentsError }}</div>
+          <div *ngIf="commentsLoading" class="comment-loading">Loading...</div>
+
+          <div class="comments-list" *ngIf="commentsPage">
+            <div *ngFor="let c of commentsPage.items" class="comment-item">
+              <div class="comment-head">
+                <a class="comment-author-link" [routerLink]="['/profile', c.authorUsername]">
+                  <img class="comment-avatar" [src]="commentAvatarSrc(c.authorProfileImageUrl)" alt="Profile" (error)="imgFallback($event)" />
+                  <span class="comment-author">{{ c.authorUsername }}</span>
+                </a>
+                <div class="comment-date">{{ timeLabel(c.createdAt) }}</div>
+              </div>
+              <div class="comment-text">{{ c.text }}</div>
+            </div>
+          </div>
+
+          <div class="comment-pager" *ngIf="commentsPage && commentsPage.totalPages > 1">
+            <button class="pager-btn icon" [disabled]="commentsPage.page === 0" (click)="loadComments(commentsPage.page - 1)">
+              <img src="assets/post.png" alt="" class="pager-ico left" />
+            </button>
+            <div class="pager-info">{{ commentsPage.page + 1 }} / {{ commentsPage.totalPages }}</div>
+            <button class="pager-btn icon" [disabled]="commentsPage.page + 1 >= commentsPage.totalPages" (click)="loadComments(commentsPage.page + 1)">
+              <img src="assets/post.png" alt="" class="pager-ico right" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="loading" class="muted">Loading video...</div>
+<div *ngIf="error" class="error">{{ error }}</div>

@@ -511,3 +511,18 @@
   filter: grayscale(1) brightness(0.8);
 }
 
+.action.active-like {
+    color: #3b82f6 !important;
+}
+
+.action-ico.liked-active {
+    filter: invert(47%) sepia(88%) saturate(1350%) hue-rotate(190deg) brightness(100%) contrast(100%) !important;
+}
+
+.action-ico {
+    transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+.action:active .action-ico {
+    transform: scale(1.2);
+}
