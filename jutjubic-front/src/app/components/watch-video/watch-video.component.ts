@@ -21,6 +21,7 @@ interface PostFeed {
   commentCount?: number;
   likeCount?: number;
   likedByMe?: boolean;
+  viewCount?: number;
 }
 
 @Component({
@@ -154,6 +155,13 @@ export class WatchVideoComponent implements OnInit {
     if (!iso) return '';
     const d = new Date(iso);
     return d.toLocaleDateString();
+  }
+
+  formatViews(count: number | undefined): string {
+    if (!count) return '0';
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
   }
 
   onCommentInputClick(): void {
