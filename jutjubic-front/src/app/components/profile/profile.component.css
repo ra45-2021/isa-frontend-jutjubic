@@ -91,6 +91,7 @@
 
 .thumb{
   width: 100%;
+  display: block;
   border: 0;
   padding: 0;
   background: transparent;

@@ -45,7 +45,7 @@
     <div class="video-card" *ngFor="let p of posts">
 
       <div class="media">
-        <button class="thumb" type="button" aria-label="Video placeholder">
+        <a class="thumb" [routerLink]="['/video', p.id]">
 
           <img
             *ngIf="p.thumbnailUrl; else noThumb"
@@ -64,14 +64,18 @@
               <span class="play-triangle"></span>
             </div>
           </div>
-        </button>
+        </a>
       </div>
 
       <div class="video-body">
-        <div class="video-title">{{ p.title }}</div>
+        <div class="video-title" 
+          [routerLink]="['/video', p.id]" 
+          style="cursor: pointer;">
+          {{ p.title }}
+        </div>
 
         <div class="video-meta">
-          {{ p.createdAt | date:'medium' }} · {{ p.commentCount || 0 }} comments
+          {{ p.createdAt | date:'medium' }} · {{ p.commentCount || 0 }} comments · {{ p.likeCount || 0 }} likes
         </div>
 
         <div class="tags" *ngIf="p.tags?.length">

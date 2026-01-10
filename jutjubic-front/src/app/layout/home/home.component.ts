@@ -21,6 +21,8 @@ interface PostFeed {
   createdAt: string;
   author: UserPublic;
   commentCount?: number;
+  likeCount?: number;
+  likedByMe?: boolean;
 }
 
 interface CommentViewDto {
@@ -273,4 +275,18 @@ export class HomeComponent implements OnInit {
       }
     });
   }
+  
+  toggleLike(p: PostFeed): void {
+  if (!this.authService.isLoggedIn()) {
+    this.router.navigateByUrl('/login');
+    return;
+  }
+
+  this.http.post<any>(`/api/posts/${p.id}/like`, {}).subscribe({
+    next: (res) => {
+      p.likeCount = res.likes;
+      p.likedByMe = res.isLiked;
+    }
+  });
+}
 }

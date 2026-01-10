@@ -26,7 +26,12 @@
         </a>
 
 
-        <div class="title" title="{{ p.title }}">{{ p.title }}</div>
+        <div class="title" 
+          title="{{ p.title }}" 
+          [routerLink]="['/video', p.id]" 
+          style="cursor: pointer;">
+          {{ p.title }}
+        </div>
         <div class="time">{{ timeLabel(p.createdAt) }}</div>
       </div>
 
@@ -39,32 +44,43 @@
         </div>
       </div>
 
-      <div class="media">
-      <button class="thumb" type="button" aria-label="Video placeholder">
-        <img
-          *ngIf="p.thumbnailUrl; else noThumb"
-          class="thumb-img"
-          [src]="p.thumbnailUrl!"
-          [alt]="p.title + ' thumbnail'"
-          loading="lazy"
-        />
+    <div class="media">
+  <a class="thumb" [routerLink]="['/video', p.id]">
+    <img
+      *ngIf="p.thumbnailUrl; else noThumb"
+      class="thumb-img"
+      [src]="p.thumbnailUrl!"
+      [alt]="p.title + ' thumbnail'"
+      loading="lazy"
+    />
+    <ng-template #noThumb>
+      <div class="thumb-fallback">No thumbnail</div>
+    </ng-template>
 
-        <ng-template #noThumb>
-          <div class="thumb-fallback">No thumbnail</div>
-        </ng-template>
-
-        <div class="play-overlay">
-          <div class="play-btn">
-            <span class="play-triangle"></span>
-          </div>
-        </div>
-      </button>
+    <div class="play-overlay">
+      <div class="play-btn">
+        <span class="play-triangle"></span>
+      </div>
     </div>
+  </a>
+</div>
 
       <div class="row3">
-        <button class="action" type="button" (click)="actionGuard()">
-          <img class="action-ico" src="assets/like.png" alt="" />
-          <span>Likes</span>
+        <button 
+          class="action" 
+          type="button" 
+          (click)="toggleLike(p)"
+          [class.active-like]="p.likedByMe"
+        >
+          <img 
+            class="action-ico" 
+            src="assets/like.png" 
+            [class.liked-active]="p.likedByMe"
+            alt="Like" 
+          />
+          <span [style.color]="p.likedByMe ? '#3b82f6' : 'inherit'">
+            {{ p.likeCount ?? 0 }} Likes
+          </span>
         </button>
 
         <button class="action action-disabled" type="button">

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 interface ProfileUser {
   id: number;
@@ -31,12 +32,14 @@ interface PostView {
     profileImageUrl?: string | null;
   };
   commentCount?: number;
+  likeCount?: number;
+  likedByMe?: boolean;
 }
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
