@@ -23,6 +23,7 @@ interface PostFeed {
   commentCount?: number;
   likeCount?: number;
   likedByMe?: boolean;
+  viewCount?: number;
 }
 
 interface CommentViewDto {
@@ -135,6 +136,13 @@ export class HomeComponent implements OnInit {
     if (diffW < 4) return `${diffW}w ago`;
 
     return d.toLocaleDateString();
+  }
+
+  formatViews(count: number | undefined): string {
+    if (!count) return '0';
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
   }
 
   commentTime(iso: string): string {

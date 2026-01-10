@@ -24,20 +24,24 @@
       </div>
 
       <div class="row3">
-        <button 
-            class="action" 
-            type="button" 
+        <button class="action" type="button">
+          <span>{{ formatViews(post.viewCount) }} Views</span>
+        </button>
+
+        <button
+            class="action"
+            type="button"
             (click)="toggleLike()"
             [class.active-like]="post.likedByMe"
         >
-            <img 
-                class="action-ico" 
-                src="assets/like.png" 
+            <img
+                class="action-ico"
+                src="assets/like.png"
                 [class.liked-active]="post.likedByMe"
-                alt="Like" 
+                alt="Like"
             />
             <span [style.color]="post.likedByMe ? '#3b82f6' : 'inherit'">
-                {{ post.likeCount ?? 0 }} 
+                {{ post.likeCount ?? 0 }}
                 {{ (post.likeCount ?? 0) === 1 ? 'Like' : 'Likes' }}
             </span>
         </button>
