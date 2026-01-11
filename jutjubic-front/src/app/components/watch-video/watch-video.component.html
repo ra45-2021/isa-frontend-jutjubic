@@ -1,66 +1,122 @@
 <div class="watch-container" *ngIf="!loading && post">
   <div class="video-section">
-    <div class="video-wrap">
-      <video class="video" controls autoplay>
-        <source [src]="getVideoUrl()" type="video/mp4">
-        Vaš browser ne podržava video plejer.
-      </video>
+
+    <div class="video-wrap" (mouseenter)="isHovering = true" (mouseleave)="isHovering = false" (click)="togglePlay()">
+      <video #player class="video" [src]="getVideoUrl()" (loadedmetadata)="onLoadedMetadata()"
+        (timeupdate)="onTimeUpdate()" (play)="onPlay()" (pause)="onPause()" playsinline></video>
+
+      <div class="controls-fade" [class.show]="shouldShowControls"></div>
+
+      <div class="controls yt" [class.show]="shouldShowControls" (click)="$event.stopPropagation()">
+        <input class="seek yt" type="range" [min]="0" [max]="duration || 0" [value]="current"
+          (input)="onSeekInput($any($event.target).value)" (mousedown)="seeking = true" (mouseup)="seeking = false"
+          (touchstart)="seeking = true" (touchend)="seeking = false" [style.background]="seekBg" aria-label="Seek" />
+
+        <div class="controls-row">
+          <button class="ctl-btn yt" type="button" (click)="togglePlay()" aria-label="Play/Pause">
+            <svg *ngIf="!isPlaying" width="22" height="22" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+              <path d="M8 5v14l11-7z"></path>
+            </svg>
+            <svg *ngIf="isPlaying" width="22" height="22" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+              <path d="M6 5h4v14H6zM14 5h4v14h-4z"></path>
+            </svg>
+          </button>
+
+          <div class="timebox yt">{{ formatTime(current) }} / {{ formatTime(duration) }}</div>
+
+          <div class="spacer"></div>
+
+          <button class="ctl-btn yt" type="button" (click)="toggleMute()" aria-label="Mute">
+            <svg *ngIf="!isMuted && volume > 0" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white"
+              stroke-width="2" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4z"></path>
+              <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+              <path d="M18 6a9 9 0 0 1 0 12"></path>
+            </svg>
+
+            <svg *ngIf="isMuted || volume === 0" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white"
+              stroke-width="2" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4z"></path>
+              <path d="M22 9l-6 6"></path>
+              <path d="M16 9l6 6"></path>
+            </svg>
+          </button>
+
+          <input class="vol yt" type="range" min="0" max="1" step="0.01" [value]="isMuted ? 0 : volume"
+            (input)="onVolumeChange($any($event.target).value)" aria-label="Volume" />
+
+          <button class="ctl-btn yt" type="button" (click)="fullscreen()" aria-label="Fullscreen">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+              aria-hidden="true">
+              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="meta">
-      <div class="row1">
-        <a class="avatar-link avatar-hover" [routerLink]="['/profile', post.author.username]">
-          <img class="avatar" [src]="avatarSrc(post.author)" alt="Profile" (error)="imgFallback($event)" />
-          <span class="avatar-username">{{ post.author.username }}</span>
-        </a>
-        <div class="title" title="{{ post.title }}">{{ post.title }}</div>
-        <div class="time">{{ timeLabel(post.createdAt) }}</div>
-      </div>
 
-      <div class="row2">
-        <div *ngIf="hasTags(post)" class="tags">
+    <div class="meta">
+      <div class="row1-watch">
+        <div class="title-main" [title]="post.title">
+          {{ post.title }}
+        </div>
+
+        <div class="title-tags" *ngIf="hasTags(post)">
           <span *ngFor="let t of post.tags" class="tag">#{{ t }}</span>
         </div>
       </div>
 
-      <div class="row3">
-        <button class="action" type="button">
-          <span>{{ formatViews(post.viewCount) }} Views</span>
-        </button>
 
-        <button
-            class="action"
-            type="button"
-            (click)="toggleLike()"
-            [class.active-like]="post.likedByMe"
-        >
-            <img
-                class="action-ico"
-                src="assets/like.png"
-                [class.liked-active]="post.likedByMe"
-                alt="Like"
-            />
-            <span [style.color]="post.likedByMe ? '#3b82f6' : 'inherit'">
-                {{ post.likeCount ?? 0 }}
-                {{ (post.likeCount ?? 0) === 1 ? 'Like' : 'Likes' }}
+      <div class="author-row">
+        <img class="author-avatar" [src]="avatarSrc(post.author)" (error)="imgFallback($event)" alt="Author" />
+
+        <div class="author-name">
+          {{ post.author.name }} {{ post.author.surname }}
+        </div>
+
+        <div class="author-actions">
+          <button class="action" type="button" (click)="toggleLike()" [class.active-like]="post.likedByMe">
+            <img class="action-ico" src="assets/like.png" [class.liked-active]="post.likedByMe" />
+            <span>
+              {{ post.likeCount ?? 0 }} {{ (post.likeCount ?? 0) === 1 ? 'Like' : 'Likes' }}
             </span>
-        </button>
-        <button class="action" type="button">
-          <img class="action-ico" src="assets/comment.png" alt="" />
-          <span class="comment-count">
-            {{ post.commentCount ?? 0 }} {{ (post.commentCount ?? 0) === 1 ? 'Comment' : 'Comments' }}
-          </span>
-        </button>
+
+          </button>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <div class="info-top">
+          <span class="info-views">{{ formatViews(post.viewCount) }} views</span>
+          <span class="dot">•</span>
+          <span class="info-date">{{ timeLabel(post.createdAt) }}</span>
+        </div>
+
+        <div class="info-desc" *ngIf="post.description && post.description.trim().length > 0">
+          {{ post.description }}
+        </div>
+        <div class="info-desc muted" *ngIf="!post.description || post.description.trim().length === 0">
+          No description.
+        </div>
       </div>
 
       <div class="comments-panel open">
         <div class="comments-inner">
+
           <div class="comment-compose">
-            <input class="comment-input" type="text" [(ngModel)]="commentDraft" (click)="onCommentInputClick()" placeholder="Write a comment..." />
+            <div class="comment-count-label">
+              {{ post.commentCount ?? 0 }} {{ (post.commentCount ?? 0) === 1 ? 'Comment' : 'Comments' }}
+            </div>
+
+            <input class="comment-input" type="text" [(ngModel)]="commentDraft" (click)="onCommentInputClick()"
+              placeholder="Write a comment..." />
+
             <button class="comment-post icon-only" type="button" (click)="postComment()">
               <img src="assets/post1.png" alt="Post" />
             </button>
           </div>
+
 
           <div *ngIf="commentsError" class="comment-error">{{ commentsError }}</div>
           <div *ngIf="commentsLoading" class="comment-loading">Loading...</div>
@@ -69,7 +125,8 @@
             <div *ngFor="let c of commentsPage.items" class="comment-item">
               <div class="comment-head">
                 <a class="comment-author-link" [routerLink]="['/profile', c.authorUsername]">
-                  <img class="comment-avatar" [src]="commentAvatarSrc(c.authorProfileImageUrl)" alt="Profile" (error)="imgFallback($event)" />
+                  <img class="comment-avatar" [src]="commentAvatarSrc(c.authorProfileImageUrl)" alt="Profile"
+                    (error)="imgFallback($event)" />
                   <span class="comment-author">{{ c.authorUsername }}</span>
                 </a>
                 <div class="comment-date">{{ timeLabel(c.createdAt) }}</div>
@@ -79,16 +136,20 @@
           </div>
 
           <div class="comment-pager" *ngIf="commentsPage && commentsPage.totalPages > 1">
-            <button class="pager-btn icon" [disabled]="commentsPage.page === 0" (click)="loadComments(commentsPage.page - 1)">
+            <button class="pager-btn icon" [disabled]="commentsPage.page === 0"
+              (click)="loadComments(commentsPage.page - 1)" aria-label="Previous comments">
               <img src="assets/post.png" alt="" class="pager-ico left" />
             </button>
             <div class="pager-info">{{ commentsPage.page + 1 }} / {{ commentsPage.totalPages }}</div>
-            <button class="pager-btn icon" [disabled]="commentsPage.page + 1 >= commentsPage.totalPages" (click)="loadComments(commentsPage.page + 1)">
+            <button class="pager-btn icon" [disabled]="commentsPage.page + 1 >= commentsPage.totalPages"
+              (click)="loadComments(commentsPage.page + 1)" aria-label="Next comments">
               <img src="assets/post.png" alt="" class="pager-ico right" />
             </button>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 </div>

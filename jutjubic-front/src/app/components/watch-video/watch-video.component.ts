@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -16,6 +16,8 @@ interface PostFeed {
   author: {
     id: number;
     username: string;
+    name: string;
+    surname: string;
     profileImageUrl?: string | null;
   };
   commentCount?: number;
@@ -31,7 +33,7 @@ interface PostFeed {
   templateUrl: './watch-video.component.html',
   styleUrls: ['./watch-video.component.css']
 })
-export class WatchVideoComponent implements OnInit {
+export class WatchVideoComponent implements OnInit, OnDestroy {
   postId!: number;
   post?: PostFeed;
   loading = true;
@@ -41,6 +43,19 @@ export class WatchVideoComponent implements OnInit {
   commentsPage: any = null;
   commentsLoading = false;
   commentsError = '';
+
+  @ViewChild('player') playerRef!: ElementRef<HTMLVideoElement>;
+
+  isHovering = false;
+  isPlaying = false;
+  isMuted = false;
+  volume = 1;
+
+  duration = 0;
+  current = 0;
+  seeking = false;
+
+  private rafId: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -58,11 +73,73 @@ export class WatchVideoComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+  }
+
+  private getJwtPayload(): any | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    try {
+      const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(payloadJson);
+    } catch {
+      return null;
+    }
+  }
+
+  private currentUserKey(): string {
+    const payload = this.getJwtPayload();
+    const stable = payload?.sub || payload?.email || payload?.username || payload?.userId;
+    if (stable) return String(stable);
+
+    const token = localStorage.getItem('token');
+    return token ? `token:${token}` : 'guest';
+  }
+
+  private likeStoreKey(): string {
+    return `jutjubic:likes:${this.currentUserKey()}`;
+  }
+
+  private getLikedSet(): Set<number> {
+    try {
+      const raw = localStorage.getItem(this.likeStoreKey());
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set<number>(Array.isArray(arr) ? arr : []);
+    } catch {
+      return new Set<number>();
+    }
+  }
+
+  private saveLikedSet(set: Set<number>): void {
+    localStorage.setItem(this.likeStoreKey(), JSON.stringify([...set]));
+  }
+
+  private restoreLikedStateForCurrentPost(): void {
+    if (!this.post) return;
+
+    if (!this.authService.isLoggedIn()) {
+      this.post.likedByMe = false;
+      return;
+    }
+
+    const liked = this.getLikedSet();
+    this.post.likedByMe = liked.has(this.post.id);
+  }
+
   loadPostDetails(): void {
     this.http.get<PostFeed>(`/api/posts/${this.postId}`).subscribe({
       next: (data) => {
         this.post = data;
         this.loading = false;
+
+        this.restoreLikedStateForCurrentPost();
+
+        queueMicrotask(() => this.applyPlayerVolume());
       },
       error: () => {
         this.error = 'Video not found.';
@@ -77,7 +154,9 @@ export class WatchVideoComponent implements OnInit {
 
   loadComments(page: number): void {
     this.commentsLoading = true;
-    this.http.get(`/api/posts/${this.postId}/comments?page=${page}&size=5`).subscribe({
+    this.commentsError = '';
+
+    this.http.get(`/api/posts/${this.postId}/comments?page=${page}&size=10`).subscribe({
       next: (res) => {
         this.commentsPage = res;
         this.commentsLoading = false;
@@ -99,80 +178,258 @@ export class WatchVideoComponent implements OnInit {
     if (!text) return;
 
     this.commentsLoading = true;
+    this.commentsError = '';
+
     this.http.post(`/api/posts/${this.postId}/comments`, { text }).subscribe({
       next: () => {
         this.commentDraft = '';
         this.loadComments(0);
-        if (this.post) {
-          this.post.commentCount = (this.post.commentCount ?? 0) + 1;
-        }
+        if (this.post) this.post.commentCount = (this.post.commentCount ?? 0) + 1;
       },
       error: (err) => {
         this.commentsLoading = false;
-        this.commentsError = err.error || 'Failed to post comment';
+        this.commentsError = err?.error || 'Failed to post comment';
       }
     });
   }
 
   toggleLike(): void {
-  if (!this.authService.isLoggedIn()) {
-    this.router.navigateByUrl('/login');
-    return;
-  }
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
 
-  this.http.post<any>(`/api/posts/${this.postId}/like`, {}).subscribe({
-    next: (res) => {
-      if (this.post) {
+    this.http.post<any>(`/api/posts/${this.postId}/like`, {}).subscribe({
+      next: (res) => {
+        if (!this.post) return;
+
         this.post.likeCount = res.likes;
         this.post.likedByMe = res.isLiked;
-      }
-    },
-    error: (err) => {
-      console.error('Error liking video', err);
-    }
-  });
-}
 
-  // Pomoćne metode preuzete iz HomeComponent
+        const liked = this.getLikedSet();
+        if (this.post.likedByMe) liked.add(this.post.id);
+        else liked.delete(this.post.id);
+        this.saveLikedSet(liked);
+      },
+      error: (err) => {
+        console.error('Error liking video', err);
+      }
+    });
+  }
+
   hasTags(p: PostFeed): boolean {
     return Array.isArray(p.tags) && p.tags.length > 0;
   }
 
   avatarSrc(author: any): string {
-    return author?.profileImageUrl || 'assets/profile.png';
+    return (author?.profileImageUrl || '').trim() ? author.profileImageUrl : 'assets/profile.png';
   }
 
   commentAvatarSrc(url: any): string {
-    return url || 'assets/profile.png';
+    return (url || '').trim() ? url : 'assets/profile.png';
   }
 
   imgFallback(e: Event): void {
     const img = e.target as HTMLImageElement;
+    if (!img) return;
     img.src = 'assets/profile.png';
   }
 
   timeLabel(iso: string): string {
-    if (!iso) return '';
     const d = new Date(iso);
+    const now = new Date();
+
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+
+    const diffD = Math.floor(diffH / 24);
+    if (diffD < 7) return `${diffD}d ago`;
+
+    const diffW = Math.floor(diffD / 7);
+    if (diffW < 4) return `${diffW}w ago`;
+
     return d.toLocaleDateString();
   }
 
   formatViews(count: number | undefined): string {
-    if (!count) return '0';
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
-    return count.toString();
+    const x = Number(count ?? 0);
+    if (x < 1000) return String(x);
+    if (x >= 1000000) return (x / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    return (x / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+
+  get shouldShowControls(): boolean {
+    return this.isHovering || !this.isPlaying;
+  }
+
+  get seekBg(): string {
+    const d = this.duration || 1;
+    const pct = Math.max(0, Math.min(100, (this.current / d) * 100));
+    return `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, rgba(255,255,255,0.25) ${pct}%, rgba(255,255,255,0.25) 100%)`;
+  }
+
+  private videoEl(): HTMLVideoElement | null {
+    return this.playerRef?.nativeElement ?? null;
+  }
+
+  private tryAutoplay(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    v.muted = false;
+    this.isMuted = false;
+
+    const attempt = v.play();
+    if (attempt && typeof (attempt as any).catch === 'function') {
+      (attempt as any).catch(() => {
+        v.muted = true;
+        this.isMuted = true;
+
+        const attemptMuted = v.play();
+        if (attemptMuted && typeof (attemptMuted as any).catch === 'function') {
+          (attemptMuted as any).catch(() => {
+            this.isPlaying = false;
+          });
+        }
+      });
+    }
+  }
+
+  onLoadedMetadata(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    this.duration = isFinite(v.duration) ? v.duration : 0;
+    this.current = v.currentTime || 0;
+    this.isPlaying = !v.paused;
+
+    this.applyPlayerVolume();
+    this.tryAutoplay();
+    this.tick();
+  }
+
+  onTimeUpdate(): void {
+    if (this.seeking) return;
+    const v = this.videoEl();
+    if (!v) return;
+    this.current = v.currentTime || 0;
+  }
+
+  private tick(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    if (!this.seeking) {
+      this.current = v.currentTime || 0;
+      this.isPlaying = !v.paused;
+    }
+
+    this.rafId = requestAnimationFrame(() => this.tick());
+  }
+
+  togglePlay(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    if (v.paused) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+
+    this.isPlaying = !v.paused;
+  }
+
+  onPlay(): void { this.isPlaying = true; }
+  onPause(): void { this.isPlaying = false; }
+
+  onSeekStart(): void { this.seeking = true; }
+
+  onSeekChange(value: string): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    const t = Number(value);
+    this.current = t;
+    v.currentTime = t;
+  }
+
+  onSeekEnd(): void { this.seeking = false; }
+
+  onSeekInput(value: number | string): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    const t = Number(value);
+    this.current = t;
+    v.currentTime = t;
+  }
+
+  toggleMute(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    v.muted = !v.muted;
+    this.isMuted = v.muted;
+  }
+
+  onVolumeChange(value: string): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    const vol = Math.min(1, Math.max(0, Number(value)));
+    this.volume = vol;
+    v.volume = vol;
+
+    if (vol === 0) {
+      v.muted = true;
+      this.isMuted = true;
+    } else {
+      v.muted = false;
+      this.isMuted = false;
+    }
+  }
+
+  private applyPlayerVolume(): void {
+    const v = this.videoEl();
+    if (!v) return;
+    v.volume = this.volume;
+    v.muted = this.isMuted;
+  }
+
+  formatTime(sec: number): string {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  fullscreen(): void {
+    const v = this.videoEl();
+    if (!v) return;
+
+    const host = v.parentElement;
+    if (!host) return;
+
+    const doc: any = document;
+    if (doc.fullscreenElement) {
+      doc.exitFullscreen?.();
+    } else {
+      (host as any).requestFullscreen?.();
+    }
   }
 
   onCommentInputClick(): void {
-    if (!this.authService.isLoggedIn()) {
-      this.router.navigateByUrl('/login');
-    }
+    if (!this.authService.isLoggedIn()) this.router.navigateByUrl('/login');
   }
 
   actionGuard(): void {
-    if (!this.authService.isLoggedIn()) {
-      this.router.navigateByUrl('/login');
-    }
+    if (!this.authService.isLoggedIn()) this.router.navigateByUrl('/login');
   }
 }

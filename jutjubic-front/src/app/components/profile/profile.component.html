@@ -75,7 +75,7 @@
         </div>
 
         <div class="video-meta">
-          {{ p.createdAt | date:'medium' }} · {{ p.commentCount || 0 }} comments · {{ p.likeCount || 0 }} likes
+          {{ p.createdAt | date:'medium' }} · {{ p.commentCount || 0 }} {{ (p.commentCount ?? 0) === 1 ? 'comment' : 'comments' }} · {{ p.likeCount || 0 }} {{ (p.likeCount ?? 0) === 1 ? 'like' : 'likes' }}
         </div>
 
         <div class="tags" *ngIf="p.tags?.length">

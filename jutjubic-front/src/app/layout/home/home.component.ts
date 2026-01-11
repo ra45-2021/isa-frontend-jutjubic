@@ -86,11 +86,75 @@ export class HomeComponent implements OnInit {
     public authService: AuthService
   ) {}
 
+
+
+private likeStoreKey(): string {
+  return `jutjubic:likes:${this.currentUserKey()}`;
+}
+
+private getLikedSet(): Set<number> {
+  try {
+    const raw = localStorage.getItem(this.likeStoreKey());
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set<number>(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set<number>();
+  }
+}
+
+private saveLikedSet(set: Set<number>): void {
+  localStorage.setItem(this.likeStoreKey(), JSON.stringify([...set]));
+}
+
+private restoreLikedState(): void {
+  if (!this.authService.isLoggedIn()) {
+    this.posts.forEach(p => (p.likedByMe = false));
+    return;
+  }
+
+  const liked = this.getLikedSet();
+  this.posts.forEach(p => {
+    p.likedByMe = liked.has(p.id);
+  });
+}
+
+private getJwtPayload(): any | null {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  try {
+    const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(payloadJson);
+  } catch {
+    return null;
+  }
+}
+
+private currentUserKey(): string {
+  const payload = this.getJwtPayload();
+
+  // Common claim names: sub, email, username
+  const stable =
+    payload?.sub ||
+    payload?.email ||
+    payload?.username ||
+    payload?.userId;
+
+  return stable ? String(stable) : 'guest';
+}
+
+
+
   ngOnInit(): void {
     this.http.get<PostFeed[]>('/api/posts').subscribe({
       next: data => {
         this.posts = data ?? [];
         this.loading = false;
+
+        this.restoreLikedState();
 
         for (const p of this.posts) {
           this.commentPageIndex[p.id] = 0;
@@ -137,6 +201,26 @@ export class HomeComponent implements OnInit {
 
     return d.toLocaleDateString();
   }
+
+  formatCount(n: number | null | undefined): string {
+  const x = Number(n ?? 0);
+  if (x < 1000) return String(x);
+
+  const units = [
+    { v: 1e9, s: 'B' },
+    { v: 1e6, s: 'M' },
+    { v: 1e3, s: 'k' },
+  ];
+
+  for (const u of units) {
+    if (x >= u.v) {
+      const val = x / u.v;
+      const rounded = val >= 100 ? Math.round(val) : Math.round(val * 10) / 10; // 999k, 1.2k, 12k
+      return `${rounded}${u.s}`;
+    }
+  }
+  return String(x);
+}
 
   formatViews(count: number | undefined): string {
     if (!count) return '0';
@@ -294,6 +378,11 @@ export class HomeComponent implements OnInit {
     next: (res) => {
       p.likeCount = res.likes;
       p.likedByMe = res.isLiked;
+
+      const liked = this.getLikedSet();
+      if (p.likedByMe) liked.add(p.id);
+      else liked.delete(p.id);
+      this.saveLikedSet(liked);
     }
   });
 }
