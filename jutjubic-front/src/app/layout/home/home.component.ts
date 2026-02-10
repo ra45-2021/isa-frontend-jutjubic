@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../components/auth/auth.service';
+import { NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 interface UserPublic {
   id: number;
@@ -80,11 +82,15 @@ export class HomeComponent implements OnInit {
 }
 
 
-  constructor(
-    private http: HttpClient,
-    private router: Router,
-    public authService: AuthService
-  ) {}
+  constructor(private http: HttpClient, private router: Router, public authService: AuthService) {
+  this.router.events
+    .pipe(filter(e => e instanceof NavigationEnd))
+    .subscribe(() => {
+      if (this.router.url === '/home' || this.router.url === '/') {
+        this.reloadPosts();
+      }
+    });
+}
 
 
 
@@ -136,7 +142,6 @@ private getJwtPayload(): any | null {
 private currentUserKey(): string {
   const payload = this.getJwtPayload();
 
-  // Common claim names: sub, email, username
   const stable =
     payload?.sub ||
     payload?.email ||
@@ -145,8 +150,6 @@ private currentUserKey(): string {
 
   return stable ? String(stable) : 'guest';
 }
-
-
 
   ngOnInit(): void {
     this.http.get<PostFeed[]>('/api/posts').subscribe({
@@ -314,6 +317,15 @@ private currentUserKey(): string {
     this.loadComments(postId, this.commentPageIndex[postId]);
   }
 
+  reloadPosts(): void {
+  this.http.get<PostFeed[]>('/api/posts').subscribe({
+    next: data => {
+      this.posts = data ?? [];
+      this.restoreLikedState();
+      }
+    });
+  }
+
   postComment(postId: number): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigateByUrl('/login');
@@ -373,6 +385,7 @@ private currentUserKey(): string {
     this.router.navigateByUrl('/login');
     return;
   }
+  
 
   this.http.post<any>(`/api/posts/${p.id}/like`, {}).subscribe({
     next: (res) => {

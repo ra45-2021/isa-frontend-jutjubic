@@ -45,6 +45,8 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   commentsError = '';
 
   @ViewChild('player') playerRef!: ElementRef<HTMLVideoElement>;
+  private viewSent = false;
+  private viewTimer: any = null;
 
   isHovering = false;
   isPlaying = false;
@@ -56,6 +58,26 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   seeking = false;
 
   private rafId: number | null = null;
+
+  private maybeCountView(): void {
+  if (this.viewSent) return;
+
+  const v = this.videoEl();
+  if (!v) return;
+
+  if (v.currentTime >= 3) {
+    this.viewSent = true;
+    console.log('[views] reached 3s, posting /view');
+
+    this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
+      next: () => {
+        console.log('[views] view OK');
+        if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
+      },
+      error: (e) => console.error('[views] view FAILED', e),
+    });
+  }
+}
 
   constructor(
     private route: ActivatedRoute,
@@ -319,6 +341,8 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
     const v = this.videoEl();
     if (!v) return;
     this.current = v.currentTime || 0;
+
+    this.maybeCountView();
   }
 
   private tick(): void {
@@ -346,7 +370,31 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
     this.isPlaying = !v.paused;
   }
 
-  onPlay(): void { this.isPlaying = true; }
+onPlay(): void {
+  console.log('[views] onPlay fired');
+  this.isPlaying = true;
+
+  if (this.viewSent || this.viewTimer) return;
+
+  this.viewTimer = setTimeout(() => {
+    this.viewTimer = null;
+
+    const v = this.videoEl();
+    if (!v) return;
+
+    if (!v.paused && v.currentTime >= 3 && !this.viewSent) {
+      this.viewSent = true;
+
+      this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
+        next: () => {
+          if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
+        },
+        error: (e) => console.error('view increment failed', e),
+      });
+    }
+  }, 3000);
+}
+
   onPause(): void { this.isPlaying = false; }
 
   onSeekStart(): void { this.seeking = true; }
