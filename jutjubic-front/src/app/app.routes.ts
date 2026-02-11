@@ -7,6 +7,9 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { UploadComponent } from './components/upload/upload.component';
 import { WatchVideoComponent } from './components/watch-video/watch-video.component';
 import { authGuard } from './components/auth/auth.guard';
+import { WatchPartiesComponent } from './components/watch-parties/watch-parties.component';
+import { PartyCreateComponent } from './components/party-create/party-create.component';
+import { PartyViewComponent } from './components/party-view/party-view.component';
 
 export const routes: Routes = [
   {
@@ -19,6 +22,9 @@ export const routes: Routes = [
       { path: 'register', component: RegisterComponent },
       { path: 'profile/:username', component: ProfileComponent },
       { path: 'upload', component: UploadComponent, canActivate: [authGuard] },
+      { path: 'watch-parties', component: WatchPartiesComponent },
+      { path: 'party-create', component: PartyCreateComponent },
+      { path: 'party-view/:partyId', component: PartyViewComponent },
       { path: '', redirectTo: 'home', pathMatch: 'full' }
 
     ]

@@ -1,0 +1,100 @@
+<div class="pc-page">
+  <div class="pc-top">
+    <div class="pc-form">
+      <div class="pc-h">Create Watch Party</div>
+
+      <label class="pc-label">Party Name</label>
+      <input class="pc-input" [(ngModel)]="name" placeholder="e.g. Friday Movie Night" />
+
+      <label class="pc-label">Description</label>
+      <textarea class="pc-textarea" [(ngModel)]="description" placeholder="Optional description"></textarea>
+
+      <button
+        *ngIf="!party"
+        class="pc-save"
+        type="button"
+        (click)="saveParty()"
+        [disabled]="saving"
+      >
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
+
+      <div class="pc-err" *ngIf="saveError">{{ saveError }}</div>
+
+      <div class="pc-meta" *ngIf="party">
+        Created by <b>{{ party.authorUsername }}</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="pc-main">
+    <div class="pc-row">
+      <div class="pc-row-left">
+        <input class="pc-search" [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Search videos by name..." />
+
+        <div class="pc-strip">
+          <button class="pc-arrow" type="button" (click)="prevRow()" [disabled]="rowStart === 0">
+            <img src="assets/post.png" alt="" class="pc-arrow-ico left" />
+          </button>
+
+          <div class="pc-cards">
+            <button class="pc-vcard" type="button" *ngFor="let v of visibleVideos" (click)="pickVideo(v)" [class.sel]="selectedVideo?.id === v.id">
+              <div class="pc-vthumb">
+                <img [src]="thumbSrc(v)" alt="" />
+              </div>
+              <div class="pc-vtitle" [title]="v.title">{{ v.title }}</div>
+            </button>
+          </div>
+
+          <button class="pc-arrow" type="button" (click)="nextRow()" [disabled]="rowStart + rowSize >= filteredVideos.length">
+            <img src="assets/post.png" alt="" class="pc-arrow-ico right" />
+          </button>
+        </div>
+
+        <div class="pc-muted" *ngIf="loadingVideos">Loading videos...</div>
+        <div class="pc-err" *ngIf="videoError">{{ videoError }}</div>
+      </div>
+    </div>
+
+    <div class="pc-bottom">
+      <div
+        #dropBox
+        class="pc-drop"
+        [class.over]="dragOver"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)"
+      >
+        <div class="pc-drop-inner" *ngIf="!selectedVideo">
+          <div class="pc-drop-title">Drop a video here</div>
+          <div class="pc-drop-sub">Select a video above, then drop here</div>
+        </div>
+
+        <div class="pc-drop-picked" *ngIf="selectedVideo">
+          <div class="pc-picked-thumb">
+            <img [src]="thumbSrc(selectedVideo)" alt="" />
+          </div>
+
+          <div class="pc-picked-title">{{ selectedVideo.title }}</div>
+          <div class="pc-picked-sub">Drop here to start the party</div>
+
+          <button class="pc-start" type="button" (click)="dropPick()" [disabled]="settingVideo">
+            {{ settingVideo ? 'Starting...' : 'Start' }}
+          </button>
+
+          <div class="pc-err" *ngIf="setVideoError">{{ setVideoError }}</div>
+        </div>
+      </div>
+
+      <div class="pc-watchers">
+        <div class="pc-watchers-h">Watchers</div>
+
+        <div class="pc-muted" *ngIf="!party">Create party to see watchers.</div>
+
+        <div class="pc-wlist" *ngIf="party">
+          <div class="pc-witem" *ngFor="let w of watchers">{{ w }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
