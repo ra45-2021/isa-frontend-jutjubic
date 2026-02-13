@@ -335,9 +335,11 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
           const now = Date.now();
           const offsetSeconds = Math.floor((now - scheduledUtc) / 1000);
 
-          const startTime = Math.max(0, Math.min(offsetSeconds, v.duration));
-          v.currentTime = startTime;
-          this.current = startTime;
+          if (offsetSeconds < v.duration) {
+              const startTime = Math.max(0, Math.min(offsetSeconds, v.duration));
+              v.currentTime = startTime;
+              this.current = startTime;
+          }
       }
 
       this.isPlaying = !v.paused;
