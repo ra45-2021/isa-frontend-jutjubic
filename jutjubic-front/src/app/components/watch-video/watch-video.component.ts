@@ -13,6 +13,7 @@ interface PostFeed {
   videoUrl: string;
   thumbnailUrl?: string | null;
   createdAt: string;
+  scheduledAt?: string | null; 
   author: {
     id: number;
     username: string;
@@ -324,26 +325,47 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   }
 
   onLoadedMetadata(): void {
-    const v = this.videoEl();
-    if (!v) return;
+      const v = this.videoEl();
+      if (!v || !this.post) return;
 
-    this.duration = isFinite(v.duration) ? v.duration : 0;
-    this.current = v.currentTime || 0;
-    this.isPlaying = !v.paused;
+      this.duration = isFinite(v.duration) ? v.duration : 0;
 
-    this.applyPlayerVolume();
-    this.tryAutoplay();
-    this.tick();
+      if (this.post.scheduledAt) {
+          const scheduledUtc = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+          const now = Date.now();
+          const offsetSeconds = Math.floor((now - scheduledUtc) / 1000);
+
+          if (offsetSeconds < v.duration) {
+              const startTime = Math.max(0, Math.min(offsetSeconds, v.duration));
+              v.currentTime = startTime;
+              this.current = startTime;
+          }
+      }
+
+      this.isPlaying = !v.paused;
+      this.applyPlayerVolume();
+      this.tryAutoplay();
+      this.tick();
   }
 
+
   onTimeUpdate(): void {
-    if (this.seeking) return;
     const v = this.videoEl();
     if (!v) return;
-    this.current = v.currentTime || 0;
+
+    const liveEdge = this.getLiveEdgeSeconds();
+
+    if (v.currentTime > liveEdge) {
+      v.currentTime = liveEdge;
+    }
+
+    if (!this.seeking) {
+      this.current = v.currentTime || 0;
+    }
 
     this.maybeCountView();
   }
+
 
   private tick(): void {
     const v = this.videoEl();
@@ -370,43 +392,48 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
     this.isPlaying = !v.paused;
   }
 
-onPlay(): void {
-  console.log('[views] onPlay fired');
-  this.isPlaying = true;
+  onPlay(): void {
+    console.log('[views] onPlay fired');
+    this.isPlaying = true;
 
-  if (this.viewSent || this.viewTimer) return;
+    if (this.viewSent || this.viewTimer) return;
 
-  this.viewTimer = setTimeout(() => {
-    this.viewTimer = null;
+    this.viewTimer = setTimeout(() => {
+      this.viewTimer = null;
 
-    const v = this.videoEl();
-    if (!v) return;
+      const v = this.videoEl();
+      if (!v) return;
 
-    if (!v.paused && v.currentTime >= 3 && !this.viewSent) {
-      this.viewSent = true;
+      if (!v.paused && v.currentTime >= 3 && !this.viewSent) {
+        this.viewSent = true;
 
-      this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
-        next: () => {
-          if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
-        },
-        error: (e) => console.error('view increment failed', e),
-      });
-    }
-  }, 3000);
-}
+        this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
+          next: () => {
+            if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
+          },
+          error: (e) => console.error('view increment failed', e),
+        });
+      }
+    }, 3000);
+  }
 
   onPause(): void { this.isPlaying = false; }
 
   onSeekStart(): void { this.seeking = true; }
 
-  onSeekChange(value: string): void {
+  onSeekChange(value: string) {
     const v = this.videoEl();
     if (!v) return;
 
-    const t = Number(value);
-    this.current = t;
-    v.currentTime = t;
+    const requested = Number(value);
+    const liveEdge = this.getLiveEdgeSeconds();
+
+    const allowed = Math.min(requested, liveEdge);
+
+    this.current = allowed;
+    v.currentTime = allowed;
   }
+
 
   onSeekEnd(): void { this.seeking = false; }
 
@@ -479,5 +506,14 @@ onPlay(): void {
 
   actionGuard(): void {
     if (!this.authService.isLoggedIn()) this.router.navigateByUrl('/login');
+  }
+
+  private getLiveEdgeSeconds(): number {
+      if (!this.post?.scheduledAt) return this.duration;
+
+      const scheduledUtc = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+      const now = Date.now();
+      const seconds = Math.floor((now - scheduledUtc) / 1000);
+      return Math.max(0, Math.min(seconds, this.duration));
   }
 }

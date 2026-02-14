@@ -14,6 +14,7 @@ import { PostService } from '../../services/post.service';
 export class UploadComponent {
   title = '';
   description = '';
+  scheduledAtLocal: string | null = null;
   tags = '';
   locationLat = '';
   locationLon = '';
@@ -143,6 +144,22 @@ export class UploadComponent {
 
     fd.append('thumbnail', this.thumbnailFile);
     fd.append('video', this.videoFile);
+
+    if (this.scheduledAtLocal) {
+      const local = this.scheduledAtLocal;
+      const dt = new Date(local);
+
+      const isoUtc = new Date(
+        dt.getFullYear(),
+        dt.getMonth(),
+        dt.getDate(),
+        dt.getHours(),
+        dt.getMinutes(),
+        dt.getSeconds()
+      ).toISOString();
+
+      fd.append('scheduledAt', isoUtc);
+    }
 
     this.submitting = true;
 

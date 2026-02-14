@@ -59,6 +59,15 @@
                 placeholder="Describe the video..."
               ></textarea>
             </label>
+            <label class="field">
+              <span class="lbl">Schedule (optional)</span>
+              <input
+                class="inp"
+                type="datetime-local"
+                [(ngModel)]="scheduledAtLocal"
+              />
+              <small class="hint">Leave empty to publish immediately</small>
+            </label>
           </div>
         </section>
 
