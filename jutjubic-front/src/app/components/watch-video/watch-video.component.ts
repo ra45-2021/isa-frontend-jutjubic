@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { FormsModule } from '@angular/forms';
+import { LiveChatComponent } from '../live-chat/live-chat.component';
 
 interface PostFeed {
   id: number;
@@ -13,7 +14,8 @@ interface PostFeed {
   videoUrl: string;
   thumbnailUrl?: string | null;
   createdAt: string;
-  scheduledAt?: string | null; 
+  scheduledAt?: string | null;
+  durationSeconds?: number | null;
   author: {
     id: number;
     username: string;
@@ -30,7 +32,7 @@ interface PostFeed {
 @Component({
   selector: 'app-watch-video',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LiveChatComponent],
   templateUrl: './watch-video.component.html',
   styleUrls: ['./watch-video.component.css']
 })
@@ -506,6 +508,14 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
 
   actionGuard(): void {
     if (!this.authService.isLoggedIn()) this.router.navigateByUrl('/login');
+  }
+
+  get isPremiereActive(): boolean {
+    if (!this.post?.scheduledAt || !this.post?.durationSeconds) return false;
+    const start = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+    const end = start + this.post.durationSeconds * 1000;
+    const now = Date.now();
+    return now >= start && now < end;
   }
 
   private getLiveEdgeSeconds(): number {
