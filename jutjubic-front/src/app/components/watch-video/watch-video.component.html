@@ -101,6 +101,10 @@
         </div>
       </div>
 
+      <div *ngIf="isPremiereActive && authService.isLoggedIn()" class="live-chat-section">
+        <app-live-chat [postId]="postId"></app-live-chat>
+      </div>
+
       <div class="comments-panel open">
         <div class="comments-inner">
 
