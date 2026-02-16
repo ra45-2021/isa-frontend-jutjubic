@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { FormsModule } from '@angular/forms';
+import { LiveChatComponent } from '../live-chat/live-chat.component';
 
 interface PostFeed {
   id: number;
@@ -13,6 +14,8 @@ interface PostFeed {
   videoUrl: string;
   thumbnailUrl?: string | null;
   createdAt: string;
+  scheduledAt?: string | null;
+  durationSeconds?: number | null;
   author: {
     id: number;
     username: string;
@@ -29,7 +32,7 @@ interface PostFeed {
 @Component({
   selector: 'app-watch-video',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LiveChatComponent],
   templateUrl: './watch-video.component.html',
   styleUrls: ['./watch-video.component.css']
 })
@@ -45,6 +48,8 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   commentsError = '';
 
   @ViewChild('player') playerRef!: ElementRef<HTMLVideoElement>;
+  private viewSent = false;
+  private viewTimer: any = null;
 
   isHovering = false;
   isPlaying = false;
@@ -56,6 +61,26 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   seeking = false;
 
   private rafId: number | null = null;
+
+  private maybeCountView(): void {
+  if (this.viewSent) return;
+
+  const v = this.videoEl();
+  if (!v) return;
+
+  if (v.currentTime >= 3) {
+    this.viewSent = true;
+    console.log('[views] reached 3s, posting /view');
+
+    this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
+      next: () => {
+        console.log('[views] view OK');
+        if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
+      },
+      error: (e) => console.error('[views] view FAILED', e),
+    });
+  }
+}
 
   constructor(
     private route: ActivatedRoute,
@@ -302,24 +327,47 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
   }
 
   onLoadedMetadata(): void {
-    const v = this.videoEl();
-    if (!v) return;
+      const v = this.videoEl();
+      if (!v || !this.post) return;
 
-    this.duration = isFinite(v.duration) ? v.duration : 0;
-    this.current = v.currentTime || 0;
-    this.isPlaying = !v.paused;
+      this.duration = isFinite(v.duration) ? v.duration : 0;
 
-    this.applyPlayerVolume();
-    this.tryAutoplay();
-    this.tick();
+      if (this.post.scheduledAt) {
+          const scheduledUtc = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+          const now = Date.now();
+          const offsetSeconds = Math.floor((now - scheduledUtc) / 1000);
+
+          if (offsetSeconds < v.duration) {
+              const startTime = Math.max(0, Math.min(offsetSeconds, v.duration));
+              v.currentTime = startTime;
+              this.current = startTime;
+          }
+      }
+
+      this.isPlaying = !v.paused;
+      this.applyPlayerVolume();
+      this.tryAutoplay();
+      this.tick();
   }
+
 
   onTimeUpdate(): void {
-    if (this.seeking) return;
     const v = this.videoEl();
     if (!v) return;
-    this.current = v.currentTime || 0;
+
+    const liveEdge = this.getLiveEdgeSeconds();
+
+    if (v.currentTime > liveEdge) {
+      v.currentTime = liveEdge;
+    }
+
+    if (!this.seeking) {
+      this.current = v.currentTime || 0;
+    }
+
+    this.maybeCountView();
   }
+
 
   private tick(): void {
     const v = this.videoEl();
@@ -346,19 +394,48 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
     this.isPlaying = !v.paused;
   }
 
-  onPlay(): void { this.isPlaying = true; }
+  onPlay(): void {
+    console.log('[views] onPlay fired');
+    this.isPlaying = true;
+
+    if (this.viewSent || this.viewTimer) return;
+
+    this.viewTimer = setTimeout(() => {
+      this.viewTimer = null;
+
+      const v = this.videoEl();
+      if (!v) return;
+
+      if (!v.paused && v.currentTime >= 3 && !this.viewSent) {
+        this.viewSent = true;
+
+        this.http.post(`/api/posts/${this.postId}/view`, {}).subscribe({
+          next: () => {
+            if (this.post) this.post.viewCount = (this.post.viewCount ?? 0) + 1;
+          },
+          error: (e) => console.error('view increment failed', e),
+        });
+      }
+    }, 3000);
+  }
+
   onPause(): void { this.isPlaying = false; }
 
   onSeekStart(): void { this.seeking = true; }
 
-  onSeekChange(value: string): void {
+  onSeekChange(value: string) {
     const v = this.videoEl();
     if (!v) return;
 
-    const t = Number(value);
-    this.current = t;
-    v.currentTime = t;
+    const requested = Number(value);
+    const liveEdge = this.getLiveEdgeSeconds();
+
+    const allowed = Math.min(requested, liveEdge);
+
+    this.current = allowed;
+    v.currentTime = allowed;
   }
+
 
   onSeekEnd(): void { this.seeking = false; }
 
@@ -431,5 +508,22 @@ export class WatchVideoComponent implements OnInit, OnDestroy {
 
   actionGuard(): void {
     if (!this.authService.isLoggedIn()) this.router.navigateByUrl('/login');
+  }
+
+  get isPremiereActive(): boolean {
+    if (!this.post?.scheduledAt || !this.post?.durationSeconds) return false;
+    const start = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+    const end = start + this.post.durationSeconds * 1000;
+    const now = Date.now();
+    return now >= start && now < end;
+  }
+
+  private getLiveEdgeSeconds(): number {
+      if (!this.post?.scheduledAt) return this.duration;
+
+      const scheduledUtc = new Date(this.post.scheduledAt.replace(' ', 'T')).getTime();
+      const now = Date.now();
+      const seconds = Math.floor((now - scheduledUtc) / 1000);
+      return Math.max(0, Math.min(seconds, this.duration));
   }
 }

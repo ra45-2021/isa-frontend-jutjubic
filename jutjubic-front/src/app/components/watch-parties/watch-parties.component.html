@@ -1,0 +1,49 @@
+<div class="wp-page">
+  <section class="wp-banner">
+    <div class="wp-left">
+        <h1 class="wp-title">
+            Watch videos together with friends anywhere.
+        </h1>
+
+        <button
+            *ngIf="authService.isLoggedIn()"
+            class="wp-btn"
+            type="button"
+            routerLink="/party-create"
+            >
+            <img class="wp-btn-ico" src="assets/add.png" alt="" />
+            <span>New Party</span>
+        </button>
+
+        <div
+            *ngIf="!authService.isLoggedIn()"
+            class="wp-subtitle"
+        >
+            Join a new party below. 
+        </div>
+        </div>
+    <div class="wp-right">
+      <img class="wp-img" src="assets/banner.png" alt="Watch Party" />
+    </div>
+  </section>
+
+    <div class="wp-list">
+    <div class="wp-list-title">Available parties</div>
+
+    <div *ngIf="loading" class="wp-muted">Loading...</div>
+    <div *ngIf="error" class="wp-error">{{ error }}</div>
+
+    <div class="wp-cards" *ngIf="!loading && parties.length">
+        <button class="wp-card" type="button" *ngFor="let p of parties" (click)="openParty(p.id)">
+        <div class="wp-card-name">{{ p.name }}</div>
+        <div class="wp-card-desc">{{ p.description }}</div>
+        <div class="wp-card-meta">by {{ p.authorUsername }}</div>
+        </button>
+    </div>
+
+    <div *ngIf="!loading && !parties.length" class="wp-muted">
+        No parties yet.
+    </div>
+    </div>
+
+</div>

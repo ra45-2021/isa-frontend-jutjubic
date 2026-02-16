@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../components/auth/auth.service';
+import { NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 interface UserPublic {
   id: number;
@@ -51,6 +53,7 @@ interface CommentPageDto {
 })
 export class HomeComponent implements OnInit {
   posts: PostFeed[] = [];
+  popularVideos: PostFeed[] = [];
   loading = true;
   error = '';
 
@@ -80,11 +83,15 @@ export class HomeComponent implements OnInit {
 }
 
 
-  constructor(
-    private http: HttpClient,
-    private router: Router,
-    public authService: AuthService
-  ) {}
+  constructor(private http: HttpClient, private router: Router, public authService: AuthService) {
+  this.router.events
+    .pipe(filter(e => e instanceof NavigationEnd))
+    .subscribe(() => {
+      if (this.router.url === '/home' || this.router.url === '/') {
+        this.reloadPosts();
+      }
+    });
+}
 
 
 
@@ -136,7 +143,6 @@ private getJwtPayload(): any | null {
 private currentUserKey(): string {
   const payload = this.getJwtPayload();
 
-  // Common claim names: sub, email, username
   const stable =
     payload?.sub ||
     payload?.email ||
@@ -146,27 +152,49 @@ private currentUserKey(): string {
   return stable ? String(stable) : 'guest';
 }
 
+ngOnInit(): void {
+  // Fetch popular videos
+  this.http.get<PostFeed[]>('/api/popular').subscribe({
+    next: data => {
+      this.popularVideos = data ?? [];
+      this.loadPosts();
+    },
+    error: () => {
+      this.popularVideos = [];
+      this.loadPosts();
+    }
+  });
+}
 
+// Load normal posts while excluding popular videos
+private loadPosts(): void {
+  this.http.get<PostFeed[]>('/api/posts').subscribe({
+    next: data => {
+      // Filter out popular videos to avoid duplicates
+      const popularIds = new Set(this.popularVideos.map(v => v.id));
+      this.posts = (data ?? []).filter(p => !popularIds.has(p.id));
 
-  ngOnInit(): void {
-    this.http.get<PostFeed[]>('/api/posts').subscribe({
-      next: data => {
-        this.posts = data ?? [];
-        this.loading = false;
+      this.loading = false;
+      this.restoreLikedState();
 
-        this.restoreLikedState();
-
-        for (const p of this.posts) {
-          this.commentPageIndex[p.id] = 0;
-          this.loadComments(p.id, 0);
-        }
-      },
-      error: () => {
-        this.error = 'Failed to load posts';
-        this.loading = false;
+      for (const p of this.posts) {
+        this.commentPageIndex[p.id] = 0;
+        this.loadComments(p.id, 0);
       }
-    });
-  }
+
+      // Also initialize comments for popular videos
+      for (const p of this.popularVideos) {
+        this.commentPageIndex[p.id] = 0;
+        this.loadComments(p.id, 0);
+      }
+    },
+    error: () => {
+      this.error = 'Failed to load posts';
+      this.loading = false;
+    }
+  });
+}
+
 
   hasTags(p: PostFeed): boolean {
     return Array.isArray(p.tags) && p.tags.length > 0;
@@ -314,6 +342,15 @@ private currentUserKey(): string {
     this.loadComments(postId, this.commentPageIndex[postId]);
   }
 
+  reloadPosts(): void {
+  this.http.get<PostFeed[]>('/api/posts').subscribe({
+    next: data => {
+      this.posts = data ?? [];
+      this.restoreLikedState();
+      }
+    });
+  }
+
   postComment(postId: number): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigateByUrl('/login');
@@ -373,6 +410,7 @@ private currentUserKey(): string {
     this.router.navigateByUrl('/login');
     return;
   }
+  
 
   this.http.post<any>(`/api/posts/${p.id}/like`, {}).subscribe({
     next: (res) => {

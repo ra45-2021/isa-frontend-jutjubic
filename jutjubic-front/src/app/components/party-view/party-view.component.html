@@ -1,0 +1,22 @@
+<div class="pv-page">
+  <div class="pv-top">
+    <button class="pv-back" type="button" (click)="back()">Back</button>
+  </div>
+
+  <div class="pv-stage">
+    <div class="pv-empty" *ngIf="!currentPostId">
+      Waiting for the host to start a video...
+    </div>
+
+    <video
+    #player
+    *ngIf="currentPostId"
+    class="pv-video"
+    [src]="videoSrc()"
+    autoplay
+    muted
+    controls
+    playsinline
+  ></video>
+  </div>
+</div>

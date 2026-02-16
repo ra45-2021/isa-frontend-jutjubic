@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = '/api/auth'; 
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -20,7 +20,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token'); // Vraća true ako token postoji
+    return !!localStorage.getItem('token'); 
   }
 
   logout() {

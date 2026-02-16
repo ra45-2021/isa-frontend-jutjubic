@@ -1,0 +1,367 @@
+.pc-page{
+  padding: 0 18px 18px;
+  color: var(--text);
+  display: grid;
+  gap: 14px;
+}
+
+.pc-top{
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.pc-form{
+  max-width: none;
+  width: 100%;      
+}
+.pc-h{
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 10px;
+}
+
+.pc-fields{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.pc-field{
+  min-width: 0;
+}
+
+.pc-label{
+  display: block;
+  font-weight: 900;
+  font-size: 13px;
+  margin: 10px 0 6px;
+  color: rgba(255,255,255,0.9);
+}
+
+.pc-input,
+.pc-textarea,
+.pc-search{
+  width: 100%;
+  font-family: Roboto, sans-serif; 
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.92);
+  border-radius: 12px;
+  padding: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pc-input::placeholder,
+.pc-textarea::placeholder,
+.pc-search::placeholder{
+  font-family: Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.65);
+  opacity: 1;
+}
+
+
+.pc-input,
+.pc-textarea{
+  text-align: left;
+}
+
+.pc-save{
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(113, 174, 247, 0.35);
+  background: rgba(89, 152, 230, 0.745);
+  color: rgba(255,255,255,0.86);
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pc-save:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pc-meta{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pc-main{
+  display: grid;
+  gap: 14px;
+}
+
+.pc-row{
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.pc-row-left{
+  display: grid;
+  gap: 10px;
+}
+
+.pc-strip{
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+}
+
+.pc-arrow{
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 0px solid rgba(255,255,255,0.12);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.pc-arrow:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pc-arrow-ico{
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.pc-arrow-ico.left{
+  transform: rotate(180deg);
+}
+
+.pc-cards{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.pc-vcard{
+  border-radius: 14px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.20);
+  cursor: pointer;
+  color: rgba(255,255,255,0.92);
+  text-align: left;
+  min-width: 0;
+}
+
+.pc-vcard:hover{
+  background: rgba(255,255,255,0.06);
+}
+
+.pc-vcard.sel{
+  border-color: rgba(96,165,250,0.45);
+  background: rgba(96,165,250,0.10);
+}
+
+.pc-vthumb{
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.pc-vthumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pc-vtitle{
+  margin-top: 8px;
+  font-weight: 900;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-bottom{
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 14px;
+}
+
+.pc-drop{
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 260px;
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.18);
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.pc-drop.over{
+  border-color: rgba(96,165,250,0.55);
+  background: rgba(96,165,250,0.08);
+}
+
+.pc-drop-inner{
+  display: grid;
+  gap: 8px;
+}
+
+.pc-drop-title{
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(255,255,255,0.94);
+}
+
+.pc-drop-sub{
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pc-drop-picked{
+  width: 100%;
+  max-width: 560px;
+  display: grid;
+  gap: 10px;
+}
+
+.pc-picked-title{
+  font-weight: 900;
+  font-size: 16px;
+  color: rgba(255,255,255,0.92);
+}
+
+.pc-start{
+  justify-self: center;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(113, 174, 247, 0.35);
+  background: rgba(89, 152, 230, 0.745);
+  color: rgba(255,255,255,0.86);
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pc-start:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pc-watchers{
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  min-height: 260px;
+  overflow: hidden;
+}
+
+.pc-watchers-h{
+  font-weight: 900;
+  font-size: 16px;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 10px;
+}
+
+.pc-wlist{
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.pc-witem{
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-weight: 800;
+  color: rgba(255,255,255,0.88);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.pc-muted{
+  color: rgba(255,255,255,0.65);
+  font-weight: 700;
+}
+
+.pc-err-slot{
+  min-height: 22px;
+  margin-top: 10px;
+}
+
+.pc-err{
+  color: #ff6b6b;
+  font-weight: 800;
+  opacity: 0;
+  text-align: center;
+  transform: translateY(-2px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.pc-err.show{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pc-picked-thumb{
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+
+.pc-picked-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 980px){
+  .pc-bottom{
+    grid-template-columns: 1fr;
+  }
+  .pc-cards{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px){
+  .pc-fields{
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px){
+  .pc-strip{
+    grid-template-columns: 44px 1fr 44px;
+  }
+  .pc-cards{
+    grid-template-columns: 1fr;
+  }
+}
