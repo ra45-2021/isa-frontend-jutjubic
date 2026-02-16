@@ -8,7 +8,7 @@
       <div class="controls-fade" [class.show]="shouldShowControls"></div>
 
       <div class="controls yt" [class.show]="shouldShowControls" (click)="$event.stopPropagation()">
-        <input class="seek yt" type="range" [min]="0" [max]="duration || 0" [value]="current"
+        <input class="seek yt" type="range" [min]="0" [max]="duration || 0" step="0.01" [value]="current"
           (input)="onSeekInput($any($event.target).value)" (mousedown)="seeking = true" (mouseup)="seeking = false"
           (touchstart)="seeking = true" (touchend)="seeking = false" [style.background]="seekBg" aria-label="Seek" />
 
