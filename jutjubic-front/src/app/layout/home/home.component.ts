@@ -53,6 +53,7 @@ interface CommentPageDto {
 })
 export class HomeComponent implements OnInit {
   posts: PostFeed[] = [];
+  popularVideos: PostFeed[] = [];
   loading = true;
   error = '';
 
@@ -151,25 +152,49 @@ private currentUserKey(): string {
   return stable ? String(stable) : 'guest';
 }
 
-  ngOnInit(): void {
-    this.http.get<PostFeed[]>('/api/posts').subscribe({
-      next: data => {
-        this.posts = data ?? [];
-        this.loading = false;
+ngOnInit(): void {
+  // Fetch popular videos
+  this.http.get<PostFeed[]>('/api/popular').subscribe({
+    next: data => {
+      this.popularVideos = data ?? [];
+      this.loadPosts();
+    },
+    error: () => {
+      this.popularVideos = [];
+      this.loadPosts();
+    }
+  });
+}
 
-        this.restoreLikedState();
+// Load normal posts while excluding popular videos
+private loadPosts(): void {
+  this.http.get<PostFeed[]>('/api/posts').subscribe({
+    next: data => {
+      // Filter out popular videos to avoid duplicates
+      const popularIds = new Set(this.popularVideos.map(v => v.id));
+      this.posts = (data ?? []).filter(p => !popularIds.has(p.id));
 
-        for (const p of this.posts) {
-          this.commentPageIndex[p.id] = 0;
-          this.loadComments(p.id, 0);
-        }
-      },
-      error: () => {
-        this.error = 'Failed to load posts';
-        this.loading = false;
+      this.loading = false;
+      this.restoreLikedState();
+
+      for (const p of this.posts) {
+        this.commentPageIndex[p.id] = 0;
+        this.loadComments(p.id, 0);
       }
-    });
-  }
+
+      // Also initialize comments for popular videos
+      for (const p of this.popularVideos) {
+        this.commentPageIndex[p.id] = 0;
+        this.loadComments(p.id, 0);
+      }
+    },
+    error: () => {
+      this.error = 'Failed to load posts';
+      this.loading = false;
+    }
+  });
+}
+
 
   hasTags(p: PostFeed): boolean {
     return Array.isArray(p.tags) && p.tags.length > 0;

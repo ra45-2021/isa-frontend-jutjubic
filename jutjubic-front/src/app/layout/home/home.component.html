@@ -1,6 +1,115 @@
 <p *ngIf="loading" class="muted">Loading posts...</p>
 <p *ngIf="error" class="error">{{ error }}</p>
 
+<div *ngIf="popularVideos.length > 0">
+  <h2>Most Popular Today</h2>
+  <div class="grid">
+    <ng-container *ngFor="let p of popularVideos">
+      <div class="post">
+        <div class="meta">
+          <div class="row1">
+            <a class="avatar-link avatar-hover" [routerLink]="['/profile', p.author.username]">
+              <img class="avatar" [src]="avatarSrc(p.author)" alt="Profile" (error)="imgFallback($event)" loading="lazy" />
+              <span class="avatar-username">{{ p.author.username }}</span>
+            </a>
+
+            <div class="title" [routerLink]="['/video', p.id]" title="{{ p.title }}" style="cursor: pointer;">
+              {{ p.title }}
+            </div>
+
+            <div class="time">{{ timeLabel(p.createdAt) }}</div>
+          </div>
+
+          <div class="row2">
+            <div *ngIf="hasTags(p)" class="tags">
+              <span *ngFor="let t of p.tags | slice:0:3" class="tag">#{{ t }}</span>
+            </div>
+          </div>
+
+          <div class="media">
+            <a class="thumb" [routerLink]="['/video', p.id]">
+              <img *ngIf="p.thumbnailUrl; else noThumb" class="thumb-img" [src]="p.thumbnailUrl!" [alt]="p.title + ' thumbnail'" loading="lazy" />
+              <ng-template #noThumb><div class="thumb-fallback">No thumbnail</div></ng-template>
+
+              <div class="play-overlay">
+                <div class="play-btn"><span class="play-triangle"></span></div>
+              </div>
+            </a>
+          </div>
+
+          <div class="row3">
+            <button class="action" type="button" (click)="toggleLike(p)" [class.active-like]="p.likedByMe">
+              <img class="action-ico" src="assets/like.png" [class.liked-active]="p.likedByMe" alt="Like" />
+              <span class="label" [style.color]="p.likedByMe ? '#3b82f6' : 'inherit'">
+                <span class="count">{{ formatCount(p.likeCount) }}</span> {{ (p.likeCount ?? 0) === 1 ? 'Like' : 'Likes' }}
+              </span>
+            </button>
+
+            <button class="action action-disabled" type="button">
+              <img class="action-ico" src="assets/comment.png" alt="" />
+              <span class="label comment-count">
+                <span class="count">{{ formatCount(p.commentCount) }}</span> {{ (p.commentCount ?? 0) === 1 ? 'Comment' : 'Comments' }}
+              </span>
+            </button>
+
+            <button class="action action-disabled" type="button">
+              <span class="label">
+                <span class="count">{{ formatCount(p.viewCount) }}</span> {{ (p.viewCount ?? 0) === 1 ? 'View' : 'Views' }}
+              </span>
+            </button>
+          </div>
+
+          <div class="comments-panel open">
+            <div class="comments-inner">
+
+              <div class="comment-compose">
+                <input class="comment-input" type="text" [value]="commentDraft[p.id] || ''" 
+                      (input)="commentDraft[p.id] = ($any($event.target).value)"
+                      (click)="onCommentInputClick()" placeholder="Write a comment..." />
+
+                <button class="comment-post icon-only" type="button" (click)="postComment(p.id)" aria-label="Post comment">
+                  <img src="assets/post1.png" alt="Post" />
+                </button>
+              </div>
+
+              <div *ngIf="commentsError[p.id]" class="comment-error">{{ commentsError[p.id] }}</div>
+              <div *ngIf="commentsLoading[p.id]" class="comment-loading">Loading...</div>
+
+              <div *ngIf="getCurrentCommentsPage(p.id) as page">
+                <div *ngFor="let c of page.items" class="comment-item">
+                  <div class="comment-head">
+                    <a class="comment-author-link" [routerLink]="['/profile', c.authorUsername]">
+                      <img class="comment-avatar" [src]="commentAvatarSrc(c.authorProfileImageUrl)" alt="Profile" (error)="imgFallback($event)" loading="lazy" />
+                      <span class="comment-author">{{ c.authorUsername }}</span>
+                    </a>
+                    <div class="comment-date">{{ commentTime(c.createdAt) }}</div>
+                  </div>
+
+                  <div class="comment-text-wrapper">
+                    <div class="comment-text clamped">{{ c.text }}</div>
+                    <button *ngIf="c.text.length > 120" class="comment-expand" type="button">...</button>
+                  </div>
+                </div>
+
+                <div class="comment-pager" *ngIf="page">
+                  <button class="pager-btn icon" type="button" (click)="prevComments(p.id)" [disabled]="page.page === 0">
+                    <img src="assets/post.png" alt="" class="pager-ico left" />
+                  </button>
+                  <div class="pager-info">{{ page.page + 1 }} / {{ page.totalPages }}</div>
+                  <button class="pager-btn icon" type="button" (click)="nextComments(p.id)" [disabled]="page.page + 1 >= page.totalPages">
+                    <img src="assets/post.png" alt="" class="pager-ico right" />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
 <div class="grid" *ngIf="!loading && !error">
   <div *ngFor="let p of posts" class="post">
 
