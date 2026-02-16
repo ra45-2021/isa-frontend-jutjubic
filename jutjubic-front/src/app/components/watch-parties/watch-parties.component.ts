@@ -48,16 +48,7 @@ export class WatchPartiesComponent {
       });
   }
 
-  joinParty(id: string): void {
-    this.http.post(`/api/parties/${id}/join`, {}).subscribe({
-      next: () => this.router.navigateByUrl(`/party-view/${id}`),
-      error: () => this.router.navigateByUrl(`/party-view/${id}`)
-    });
-  }
-
   openParty(id: string): void {
     this.router.navigateByUrl(`/party-create/${id}`);
   }
-
-
 }

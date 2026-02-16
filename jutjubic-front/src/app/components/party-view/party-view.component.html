@@ -1,18 +1,6 @@
 <div class="pv-page">
   <div class="pv-top">
     <button class="pv-back" type="button" (click)="back()">Back</button>
-
-    <div class="pv-meta" *ngIf="party">
-      <div class="pv-title">{{ party.name }}</div>
-      <div class="pv-sub">by {{ party.authorUsername }}</div>
-    </div>
-
-    <div class="pv-watchers">
-      <div class="pv-wtitle">Watchers</div>
-      <div class="pv-wlist">
-        <div class="pv-witem" *ngFor="let w of watchers">{{ w }}</div>
-      </div>
-    </div>
   </div>
 
   <div class="pv-stage">
@@ -21,12 +9,14 @@
     </div>
 
     <video
-      *ngIf="currentPostId"
-      class="pv-video"
-      [src]="videoSrc()"
-      autoplay
-      controls
-      playsinline
-    ></video>
+    #player
+    *ngIf="currentPostId"
+    class="pv-video"
+    [src]="videoSrc()"
+    autoplay
+    muted
+    controls
+    playsinline
+  ></video>
   </div>
 </div>

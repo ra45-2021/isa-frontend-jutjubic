@@ -1,10 +1,11 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, DestroyRef, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { WatchPartySocketService } from '../../services/watch-party-socket.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type PartyDto = {
   id: string;
@@ -14,40 +15,14 @@ type PartyDto = {
   authorUsername: string;
   videoPostId: number | null;
   watchers: string[];
+  canManage?: boolean;
 };
 
-type CreatePartyRequestDto = {
-  name: string;
-  description: string;
-};
-
-type SetPartyVideoRequestDto = {
-  postId: number;
-};
-
-type UserPublic = {
-  id: number;
-  username: string;
-  displayName: string;
-  profileImageUrl?: string | null;
-};
-
-type PostFeed = {
-  id: number;
-  title: string;
-  description?: string | null;
-  tags?: string[];
-  videoUrl: string;
-  thumbnailUrl?: string | null;
-  createdAt: string;
-  author: UserPublic;
-};
-
-type VideoLite = {
-  id: number;
-  title: string;
-  thumbnailUrl?: string | null;
-};
+type CreatePartyRequestDto = { name: string; description: string; };
+type SetPartyVideoRequestDto = { postId: number; };
+type UserPublic = { id: number; username: string; displayName: string; profileImageUrl?: string | null; };
+type PostFeed = { id: number; title: string; videoUrl: string; thumbnailUrl?: string | null; author: UserPublic; };
+type VideoLite = { id: number; title: string; thumbnailUrl?: string | null; };
 
 @Component({
   selector: 'app-party-create',
@@ -56,209 +31,155 @@ type VideoLite = {
   templateUrl: './party-create.component.html',
   styleUrls: ['./party-create.component.css'],
 })
-export class PartyCreateComponent {
+export class PartyCreateComponent implements OnInit {
   name = '';
   description = '';
-
   party: PartyDto | null = null;
-
+  canManage = false;
   saving = false;
   saveError = '';
-
   videos: VideoLite[] = [];
   loadingVideos = true;
   videoError = '';
-
   search = '';
   rowStart = 0;
   rowSize = 4;
-
   selectedVideo: VideoLite | null = null;
   settingVideo = false;
   setVideoError = '';
-
   dragOver = false;
-
   watchers: string[] = [];
 
   private sub: { unsubscribe: () => void } | null = null;
+  private errorTimers: Partial<Record<'saveError' | 'videoError' | 'setVideoError', any>> = {};
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('dropBox') dropBoxRef!: ElementRef<HTMLDivElement>;
 
   constructor(
     private http: HttpClient,
     private router: Router,
+    private route: ActivatedRoute,
     public authService: AuthService,
-    private ws: WatchPartySocketService
+    private ws: WatchPartySocketService,
+    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
-    if (!this.authService.isLoggedIn()) {
-      this.router.navigateByUrl('/login');
-      return;
+    const partyId = this.route.snapshot.paramMap.get('partyId');
+    if (partyId) {
+      this.http.post<PartyDto>(`/api/parties/${partyId}/join`, {}).subscribe({
+        next: (p) => { this.party = p; this.loadParty(partyId); },
+        error: () => this.loadParty(partyId)
+      });
+    } else {
+      if (!this.authService.isLoggedIn()) {
+        this.router.navigateByUrl('/login');
+        return;
+      }
+      this.loadVideos();
     }
-    this.loadVideos();
   }
 
-  private loadVideos(): void {
+  private loadVideos(done?: () => void): void {
     this.loadingVideos = true;
-    this.videoError = '';
-
-    this.http.get<PostFeed[]>('/api/posts').subscribe({
+    this.http.get<PostFeed[]>('/api/posts').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (rows) => {
-        const mapped = (rows ?? []).map((p) => ({
-          id: p.id,
-          title: p.title,
-          thumbnailUrl: p.thumbnailUrl ?? null,
-        }));
-        this.videos = mapped;
+        this.videos = (rows ?? []).map(p => ({ id: p.id, title: p.title, thumbnailUrl: p.thumbnailUrl ?? null }));
         this.loadingVideos = false;
+        done?.();
+        if (this.party?.videoPostId != null) {
+          this.selectedVideo = this.videos.find(v => v.id === this.party!.videoPostId) ?? null;
+        }
       },
-      error: () => {
-        this.videos = [];
-        this.loadingVideos = false;
-        this.videoError = 'Failed to load videos';
-      },
+      error: () => { this.loadingVideos = false; done?.(); }
+    });
+  }
+
+  private loadParty(partyId: string): void {
+    this.http.get<PartyDto>(`/api/parties/${partyId}`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (p) => {
+        this.party = p;
+        this.name = p.name;
+        this.description = p.description;
+        this.watchers = p.watchers;
+        this.canManage = !!p.canManage;
+        this.loadVideos(() => {
+          if (p.videoPostId) this.selectedVideo = this.videos.find(v => v.id === p.videoPostId) ?? null;
+        });
+        this.connectPartySocket(p.id);
+      }
     });
   }
 
   get filteredVideos(): VideoLite[] {
     const q = this.search.trim().toLowerCase();
-    if (!q) return this.videos;
-    return this.videos.filter((v) => v.title.toLowerCase().includes(q));
+    return q ? this.videos.filter(v => v.title.toLowerCase().includes(q)) : this.videos;
   }
 
   get visibleVideos(): VideoLite[] {
-    const list = this.filteredVideos;
-    return list.slice(this.rowStart, this.rowStart + this.rowSize);
+    return this.filteredVideos.slice(this.rowStart, this.rowStart + this.rowSize);
   }
 
-  nextRow(): void {
-    const list = this.filteredVideos;
-    const next = this.rowStart + this.rowSize;
-    if (next >= list.length) return;
-    this.rowStart = next;
-  }
-
-  prevRow(): void {
-    const prev = this.rowStart - this.rowSize;
-    this.rowStart = Math.max(0, prev);
-  }
-
-  onSearchChange(): void {
-    this.rowStart = 0;
-  }
+  onSearchChange() { this.rowStart = 0; }
+  nextRow() { if (this.rowStart + this.rowSize < this.filteredVideos.length) this.rowStart += this.rowSize; }
+  prevRow() { this.rowStart = Math.max(0, this.rowStart - this.rowSize); }
 
   saveParty(): void {
-    const n = this.name.trim();
-    if (!n) {
-      this.saveError = 'Party name is required';
-      return;
-    }
-
+    if (!this.name.trim()) return;
     this.saving = true;
-    this.saveError = '';
-
-    const body: CreatePartyRequestDto = {
-      name: n,
-      description: this.description?.trim() ?? '',
-    };
-
-    this.http.post<PartyDto>('/api/parties', body).subscribe({
-      next: (p) => {
-        this.party = p;
-        this.watchers = p.watchers ?? [];
-        this.saving = false;
-        this.connectPartySocket(p.id);
-      },
-      error: (e) => {
-        this.saving = false;
-        this.saveError = typeof e?.error === 'string' && e.error.trim() ? e.error : 'Failed to create party';
-      },
-    });
+    this.http.post<PartyDto>('/api/parties', { name: this.name, description: this.description })
+      .subscribe({
+        next: (p) => {
+          this.party = p;
+          this.canManage = true;
+          this.saving = false;
+          this.connectPartySocket(p.id);
+        },
+        error: () => this.saving = false
+      });
   }
 
   private connectPartySocket(partyId: string): void {
     this.ws.connect(() => {
-      this.sub?.unsubscribe();
+      if (this.sub) this.sub.unsubscribe();
       this.sub = this.ws.subscribeParty(partyId, (msg) => {
         if (!msg) return;
-
-        if (msg.type === 'JOIN') {
-          const line = `${msg.displayName} has joined!`;
-          this.watchers = [...this.watchers, line];
-        }
-
-        if (msg.type === 'VIDEO_SELECTED') {
-          if (typeof msg.postId === 'number') {
-            const v = this.videos.find(x => x.id === msg.postId) ?? null;
-            this.selectedVideo = v;
+        this.zone.run(() => {
+          if (msg.type === 'PLAY') {
+            sessionStorage.setItem('pendingVideoId', msg.postId.toString());
+            this.router.navigateByUrl(`/party-view/${partyId}`);
           }
-        }
+          if (msg.type === 'JOIN' || msg.type === 'WATCHERS') {
+            this.watchers = msg.watchers ?? this.watchers;
+          }
+        });
       });
     });
   }
 
-  pickVideo(v: VideoLite): void {
-    this.selectedVideo = v;
-  }
+  pickVideo(v: VideoLite) { if (this.canManage) this.selectedVideo = v; }
 
-  dropPick(): void {
-    if (!this.party) {
-      this.setVideoError = 'Create party first';
-      return;
+  dropPick() {
+    if (this.canManage && this.party && this.selectedVideo) {
+      this.setPartyVideo(this.selectedVideo.id);
     }
-    if (!this.selectedVideo) return;
-    this.setPartyVideo(this.selectedVideo.id);
   }
 
   private setPartyVideo(postId: number): void {
-    if (!this.party) return;
-
     this.settingVideo = true;
-    this.setVideoError = '';
-
-    const body: SetPartyVideoRequestDto = { postId };
-
-    this.http.post<PartyDto>(`/api/parties/${this.party.id}/video`, body).subscribe({
-      next: (p) => {
-        this.party = p;
-        this.settingVideo = false;
-
-        this.http.post(`/api/parties/${p.id}/broadcast`, { postId }).subscribe({ next: () => {}, error: () => {} });
-
-        this.router.navigateByUrl(`/party-view/${p.id}`);
-      },
-      error: (e) => {
-        this.settingVideo = false;
-        this.setVideoError = typeof e?.error === 'string' && e.error.trim() ? e.error : 'Failed to set video';
-      },
-    });
+    this.http.post<PartyDto>(`/api/parties/${this.party!.id}/start`, { postId })
+      .subscribe({
+        next: (p) => {
+          sessionStorage.setItem('pendingVideoId', postId.toString());
+          this.router.navigateByUrl(`/party-view/${p.id}`);
+        },
+        error: () => this.settingVideo = false
+      });
   }
 
-  openPartyView(): void {
-    if (!this.party) return;
-    this.router.navigateByUrl(`/party-view/${this.party.id}`);
-  }
-
-  onDragOver(ev: DragEvent): void {
-    ev.preventDefault();
-    this.dragOver = true;
-  }
-
-  onDragLeave(): void {
-    this.dragOver = false;
-  }
-
-  onDrop(ev: DragEvent): void {
-    ev.preventDefault();
-    this.dragOver = false;
-    this.dropPick();
-  }
-
-  thumbSrc(v: VideoLite): string {
-    const t = (v.thumbnailUrl ?? '').trim();
-    if (t) return t.startsWith('http') ? t : t;
-    return 'assets/logo2.png';
-  }
+  onDragOver(ev: DragEvent) { if (this.canManage) { ev.preventDefault(); this.dragOver = true; } }
+  onDragLeave() { this.dragOver = false; }
+  onDrop(ev: DragEvent) { if (this.canManage) { ev.preventDefault(); this.dragOver = false; this.dropPick(); } }
+  thumbSrc(v: VideoLite) { return v.thumbnailUrl || 'assets/logo2.png'; }
 }

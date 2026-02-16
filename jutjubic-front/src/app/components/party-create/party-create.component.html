@@ -3,11 +3,17 @@
     <div class="pc-form">
       <div class="pc-h">Create Watch Party</div>
 
-      <label class="pc-label">Party Name</label>
-      <input class="pc-input" [(ngModel)]="name" placeholder="e.g. Friday Movie Night" />
+      <div class="pc-fields">
+        <div class="pc-field">
+          <label class="pc-label">Party Name</label>
+          <input class="pc-input" [(ngModel)]="name" placeholder="e.g. Friday Movie Night" [readonly]="!!party" />
+        </div>
 
-      <label class="pc-label">Description</label>
-      <textarea class="pc-textarea" [(ngModel)]="description" placeholder="Optional description"></textarea>
+        <div class="pc-field">
+          <label class="pc-label">Description</label>
+          <textarea class="pc-textarea" [(ngModel)]="description" placeholder="Optional description" [readonly]="!!party"></textarea>
+        </div>
+      </div>
 
       <button
         *ngIf="!party"
@@ -19,7 +25,9 @@
         {{ saving ? 'Saving...' : 'Save' }}
       </button>
 
-      <div class="pc-err" *ngIf="saveError">{{ saveError }}</div>
+      <div class="pc-err-slot">
+        <div class="pc-err" [class.show]="!!saveError">{{ saveError }}</div>
+      </div>
 
       <div class="pc-meta" *ngIf="party">
         Created by <b>{{ party.authorUsername }}</b>
@@ -27,18 +35,31 @@
     </div>
   </div>
 
-  <div class="pc-main">
+  <div class="pc-main" *ngIf="party">
     <div class="pc-row">
       <div class="pc-row-left">
-        <input class="pc-search" [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Search videos by name..." />
+        <input
+          class="pc-search"
+          [(ngModel)]="search"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search videos by name..."
+          [disabled]="!canManage"
+        />
 
         <div class="pc-strip">
-          <button class="pc-arrow" type="button" (click)="prevRow()" [disabled]="rowStart === 0">
+          <button class="pc-arrow" type="button" (click)="prevRow()" [disabled]="rowStart === 0 || !canManage">
             <img src="assets/post.png" alt="" class="pc-arrow-ico left" />
           </button>
 
           <div class="pc-cards">
-            <button class="pc-vcard" type="button" *ngFor="let v of visibleVideos" (click)="pickVideo(v)" [class.sel]="selectedVideo?.id === v.id">
+            <button
+              class="pc-vcard"
+              type="button"
+              *ngFor="let v of visibleVideos"
+              (click)="pickVideo(v)"
+              [class.sel]="selectedVideo?.id === v.id"
+              [disabled]="!canManage"
+            >
               <div class="pc-vthumb">
                 <img [src]="thumbSrc(v)" alt="" />
               </div>
@@ -46,13 +67,20 @@
             </button>
           </div>
 
-          <button class="pc-arrow" type="button" (click)="nextRow()" [disabled]="rowStart + rowSize >= filteredVideos.length">
+          <button class="pc-arrow" type="button" (click)="nextRow()" [disabled]="rowStart + rowSize >= filteredVideos.length || !canManage">
             <img src="assets/post.png" alt="" class="pc-arrow-ico right" />
           </button>
         </div>
 
         <div class="pc-muted" *ngIf="loadingVideos">Loading videos...</div>
-        <div class="pc-err" *ngIf="videoError">{{ videoError }}</div>
+
+        <div class="pc-err-slot">
+          <div class="pc-err" [class.show]="!!videoError">{{ videoError }}</div>
+        </div>
+
+        <div class="pc-muted" *ngIf="!canManage">
+          Only the party author can choose/start videos.
+        </div>
       </div>
     </div>
 
@@ -76,22 +104,21 @@
           </div>
 
           <div class="pc-picked-title">{{ selectedVideo.title }}</div>
-          <div class="pc-picked-sub">Drop here to start the party</div>
 
-          <button class="pc-start" type="button" (click)="dropPick()" [disabled]="settingVideo">
+          <button *ngIf="canManage" class="pc-start" type="button" (click)="dropPick()" [disabled]="settingVideo">
             {{ settingVideo ? 'Starting...' : 'Start' }}
           </button>
 
-          <div class="pc-err" *ngIf="setVideoError">{{ setVideoError }}</div>
+          <div class="pc-err-slot">
+            <div class="pc-err" [class.show]="!!setVideoError">{{ setVideoError }}</div>
+          </div>
         </div>
       </div>
 
       <div class="pc-watchers">
         <div class="pc-watchers-h">Watchers</div>
 
-        <div class="pc-muted" *ngIf="!party">Create party to see watchers.</div>
-
-        <div class="pc-wlist" *ngIf="party">
+        <div class="pc-wlist">
           <div class="pc-witem" *ngFor="let w of watchers">{{ w }}</div>
         </div>
       </div>

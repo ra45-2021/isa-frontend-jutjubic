@@ -24,6 +24,7 @@ export const routes: Routes = [
       { path: 'upload', component: UploadComponent, canActivate: [authGuard] },
       { path: 'watch-parties', component: WatchPartiesComponent },
       { path: 'party-create', component: PartyCreateComponent },
+      { path: 'party-create/:partyId', component: PartyCreateComponent },
       { path: 'party-view/:partyId', component: PartyViewComponent },
       { path: '', redirectTo: 'home', pathMatch: 'full' }
 
