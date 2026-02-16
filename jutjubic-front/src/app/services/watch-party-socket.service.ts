@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
+//ifconfig u terminalu i vidi koja je adresa
+//http://NOVA_IP_ADRESA:4200
+//ng serve --host 0.0.0.0 --public-host http://NOVA_IP_ADRESA:4200 --proxy-config proxy.conf.json;
+
 @Injectable({ providedIn: 'root' })
 export class WatchPartySocketService {
   private client: Client | null = null;
@@ -9,19 +13,17 @@ export class WatchPartySocketService {
   connect(onConnected: () => void): void {
     const token = localStorage.getItem('token');
 
-    // Ako je već povezan sa istim klijentom, samo izvrši callback
     if (this.client?.connected) {
       onConnected();
       return;
     }
 
-    // Ako postoji stari klijent, ugasi ga pre pravljenja novog
     if (this.client) {
       this.client.deactivate();
     }
 
     this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS('/ws'),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       reconnectDelay: 5000,
       debug: (msg) => {
@@ -38,8 +40,6 @@ export class WatchPartySocketService {
   }
 
   subscribeParty(partyId: string, onMsg: (msg: any) => void) {
-    // Ako se pozove pretplata a klijent pukne ili nije povezan, 
-    // ovaj deo osigurava da ne pukne cela komponenta
     if (!this.client || !this.client.connected) {
       console.warn("Socket nije povezan, pokušaj pretplate će biti odbačen.");
       return { unsubscribe: () => {} };

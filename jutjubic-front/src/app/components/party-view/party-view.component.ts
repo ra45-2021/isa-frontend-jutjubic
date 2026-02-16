@@ -46,7 +46,6 @@ export class PartyViewComponent implements OnInit, OnDestroy {
     }
     this.partyId = id;
 
-    // Uzmi ID iz session storage ako ga je navigacija tamo ostavila
     const pendingId = sessionStorage.getItem('pendingVideoId');
     if (pendingId) {
       this.currentPostId = Number(pendingId);
@@ -100,7 +99,7 @@ export class PartyViewComponent implements OnInit, OnDestroy {
   }
 
   videoSrc(): string {
-    return this.currentPostId ? `http://localhost:8080/api/posts/${this.currentPostId}/video` : '';
+    return this.currentPostId ? `/api/posts/${this.currentPostId}/video` : '';
   }
 
   back() { this.router.navigateByUrl('/watch-parties'); }
