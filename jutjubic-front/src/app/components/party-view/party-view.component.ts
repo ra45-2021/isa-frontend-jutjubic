@@ -65,7 +65,6 @@ export class PartyViewComponent implements OnInit, OnDestroy {
       next: (p) => {
         this.party = p;
         this.watchers = p.watchers ?? [];
-        // Ako već nemamo currentPostId iz session-a, uzmi iz baze
         if (!this.currentPostId && p.videoPostId) {
           this.setPostId(p.videoPostId);
         }
@@ -73,29 +72,51 @@ export class PartyViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  private isSubscribing = false; 
+
   private connectSocket(id: string): void {
+    if (this.wsSub || this.isSubscribing) return;
+
+    this.isSubscribing = true;
+
     this.wpSocket.connect(() => {
+      if (this.wsSub) {
+        this.isSubscribing = false;
+        return;
+      }
+
       this.wsSub = this.wpSocket.subscribeParty(id, (msg: any) => {
         this.zone.run(() => {
+          console.log("Obrađujem socket poruku:", msg.type);
           if (msg.type === 'WATCHERS') this.watchers = msg.watchers;
           if (msg.type === 'PLAY') this.setPostId(Number(msg.postId));
         });
       });
+      
+      this.isSubscribing = false;
     });
   }
 
   private setPostId(id: number | null): void {
-    if (!id) return;
-    const changed = this.currentPostId !== id;
-    this.currentPostId = id;
+  if (!id) return;
+  const changed = this.currentPostId !== id;
+  this.currentPostId = id;
 
-    setTimeout(() => {
+  setTimeout(() => {
       const v = this.playerRef?.nativeElement;
-      if (!v) return;
-      if (changed) v.load();
-      v.muted = true;
-      v.play().catch(() => console.log('Autoplay blocked'));
-    }, 150);
+      if (!v) {
+        console.warn("Video element nije pronađen u DOM-u!");
+        return;
+      }
+      
+      if (changed) {
+        v.src = `/api/posts/${id}/video`;
+        v.load();
+      }
+      
+      v.muted = true; 
+      v.play().catch(err => console.error("Greška pri reprodukciji:", err));
+    }, 200);
   }
 
   videoSrc(): string {
