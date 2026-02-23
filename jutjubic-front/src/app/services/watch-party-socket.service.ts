@@ -4,7 +4,8 @@ import SockJS from 'sockjs-client';
 
 //ifconfig u terminalu i vidi koja je adresa
 //http://NOVA_IP_ADRESA:4200
-//ng serve --host 0.0.0.0 --public-host http://NOVA_IP_ADRESA:4200 --proxy-config proxy.conf.json;
+// ng serve --host 0.0.0.0 --disable-host-check --proxy-config proxy.conf.json
+
 
 @Injectable({ providedIn: 'root' })
 export class WatchPartySocketService {
